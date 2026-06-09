@@ -1,0 +1,32 @@
+{
+  "name": "wassoh-farm",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.39.0",
+    "jsonwebtoken": "^9.0.3",
+    "nuxt": "3.15.4",
+    "postgres": "^3.4.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@nuxtjs/tailwindcss": "^6.13.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "drizzle-kit": "^0.30.0",
+    "nuxt-icon": "^0.6.0",
+    "typescript": "^5.7.0"
+  }
+}
