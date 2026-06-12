@@ -141,3 +141,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Docker compose & backup (config locale serveur)
+docker-compose.yml
+scripts/backup-db.sh
