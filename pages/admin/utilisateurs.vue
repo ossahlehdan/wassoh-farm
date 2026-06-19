@@ -13,10 +13,10 @@
         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500"
       />
       <input
-        v-model="form.email"
-        type="email"
+        v-model="form.username"
+        type="text"
         required
-        placeholder="Email"
+        placeholder="Identifiant"
         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500"
       />
       <input
@@ -60,7 +60,7 @@
       >
         <div>
           <p class="font-medium text-gray-900">{{ u.name }}</p>
-          <p class="text-xs text-gray-500">{{ u.email }}</p>
+          <p class="text-xs text-gray-500">{{ u.username }}</p>
         </div>
         <div class="text-right">
           <span
@@ -87,7 +87,7 @@ const users = ref<any[]>([])
 const sites = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
-const form = reactive({ name: '', email: '', password: '', role: 'employee', siteId: '' })
+const form = reactive({ name: '', username: '', password: '', role: 'employee', siteId: '' })
 
 async function fetchData() {
   loading.value = true
@@ -111,7 +111,7 @@ async function addUser() {
       body: { ...form, siteId: form.siteId ? Number(form.siteId) : null },
     })
     form.name = ''
-    form.email = ''
+    form.username = ''
     form.password = ''
     form.role = 'employee'
     form.siteId = ''

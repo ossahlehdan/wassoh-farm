@@ -14,7 +14,7 @@ export type Site = typeof sites.$inferSelect
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
+  username: varchar('username', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   role: varchar('role', { length: 20 }).notNull().default('employee'), // 'admin' | 'employee'
   siteId: integer('site_id').references(() => sites.id), // null = admin (tous les sites)

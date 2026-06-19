@@ -22,11 +22,11 @@
           </div>
 
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Identifiant</label>
             <input
-              id="email"
-              v-model="form.email"
-              type="email"
+              id="username"
+              v-model="form.username"
+              type="text"
               required
               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500"
             />
@@ -67,7 +67,7 @@ definePageMeta({ layout: false })
 const { setup: setupAdmin } = useAuth()
 const router = useRouter()
 
-const form = reactive({ name: '', email: '', password: '' })
+const form = reactive({ name: '', username: '', password: '' })
 const error = ref('')
 const loading = ref(false)
 
@@ -75,7 +75,7 @@ async function handleSetup() {
   error.value = ''
   loading.value = true
   try {
-    await setupAdmin(form.name, form.email, form.password)
+    await setupAdmin(form.name, form.username, form.password)
     router.push('/')
   } catch (e: any) {
     error.value = e.data?.message || e.statusMessage || 'Erreur lors de la création'

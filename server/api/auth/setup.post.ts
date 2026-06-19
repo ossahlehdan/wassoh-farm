@@ -13,23 +13,23 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const { name, email, password } = body
+  const { name, username, password } = body
 
-  if (!name || !email || !password) {
-    throw createError({ statusCode: 400, statusMessage: 'Nom, email et mot de passe requis' })
+  if (!name || !username || !password) {
+    throw createError({ statusCode: 400, statusMessage: 'Nom, identifiant et mot de passe requis' })
   }
 
   const passwordHash = await hashPassword(password)
 
   const [user] = await db
     .insert(users)
-    .values({ name, email, passwordHash, role: 'admin', siteId: null })
+    .values({ name, username, passwordHash, role: 'admin', siteId: null })
     .returning()
 
   const authUser: AuthUser = {
     id: user.id,
     name: user.name,
-    email: user.email,
+    username: user.username,
     role: 'admin',
     siteId: null,
   }

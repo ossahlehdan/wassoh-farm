@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     .select({
       id: users.id,
       name: users.name,
-      email: users.email,
+      username: users.username,
       role: users.role,
       siteId: users.siteId,
       siteName: sites.name,
