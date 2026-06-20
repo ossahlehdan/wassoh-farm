@@ -85,6 +85,7 @@ const route = useRoute()
 
 const navItems = [
   { to: '/', label: 'Tableau de bord', icon: 'lucide:layout-dashboard' },
+  { to: '/pepinieres', label: 'Pépinières', icon: 'lucide:flower-2' },
   { to: '/cultures', label: 'Cultures', icon: 'lucide:sprout' },
   { to: '/recoltes', label: 'Récoltes', icon: 'lucide:wheat' },
   { to: '/ventes', label: 'Ventes', icon: 'lucide:trending-up' },

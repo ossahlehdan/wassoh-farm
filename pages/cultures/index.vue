@@ -83,6 +83,7 @@
             </div>
             <p class="text-xs text-gray-500 mt-1">{{ c.siteName }} &middot; Semis {{ formatDate(c.startDate) }}</p>
             <p v-if="c.area" class="text-xs text-gray-400">{{ c.area }} {{ c.areaUnit === 'm2' ? 'm²' : c.areaUnit }}</p>
+            <p v-if="c.pepiniereId" class="text-xs text-purple-500 mt-0.5">Issue de pépinière</p>
           </div>
           <div class="flex items-center gap-3">
             <button class="text-xs text-farm-600 hover:underline" @click="startEdit(c)">Modifier</button>

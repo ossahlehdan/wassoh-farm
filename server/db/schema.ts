@@ -78,11 +78,28 @@ export const intrantMouvements = pgTable('intrant_mouvements', {
 
 export type IntrantMouvement = typeof intrantMouvements.$inferSelect
 
+// ── Pépinières ──
+export const pepinieres = pgTable('pepinieres', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(), // variété : Riz NERICA, Tomate Roma...
+  siteId: integer('site_id').references(() => sites.id).notNull(),
+  plantsSown: integer('plants_sown').notNull(), // nombre de plants semés
+  plantsViable: integer('plants_viable'), // plants viables après germination
+  sowDate: date('sow_date').notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('en_cours'), // en_cours, prete, transplantee, perdue
+  note: text('note'),
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type Pepiniere = typeof pepinieres.$inferSelect
+
 // ── Cultures (ce qui est planté) ──
 export const cultures = pgTable('cultures', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(), // Riz, Maïs, Manioc...
   siteId: integer('site_id').references(() => sites.id).notNull(),
+  pepiniereId: integer('pepiniere_id').references(() => pepinieres.id), // lien optionnel si issu d'une pépinière
   area: decimal('area', { precision: 10, scale: 2 }),
   areaUnit: varchar('area_unit', { length: 10 }).default('ha'),
   startDate: date('start_date').notNull(),

@@ -1,5 +1,5 @@
 import { db } from '~/server/db'
-import { cultures, sites } from '~/server/db/schema'
+import { cultures, sites, pepinieres } from '~/server/db/schema'
 import { requireAuth } from '~/server/utils/auth'
 import { eq, desc } from 'drizzle-orm'
 
@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
       name: cultures.name,
       siteId: cultures.siteId,
       siteName: sites.name,
+      pepiniereId: cultures.pepiniereId,
       area: cultures.area,
       areaUnit: cultures.areaUnit,
       startDate: cultures.startDate,
