@@ -1,59 +1,83 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-farm-800 mb-6">Tableau de bord</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Tableau de bord</h1>
 
-    <div v-if="loading" class="text-center py-12 text-gray-400">
-      Chargement...
-    </div>
+    <div v-if="loading" class="text-center py-12 text-gray-400">Chargement...</div>
 
     <template v-else-if="stats">
       <!-- Summary cards -->
-      <div class="grid grid-cols-1 gap-4 mb-8">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <p class="text-sm text-gray-500 mb-1">Solde</p>
-          <p
-            class="text-2xl font-bold"
-            :class="stats.balance >= 0 ? 'text-farm-600' : 'text-red-600'"
-          >
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-farm-50 flex items-center justify-center">
+              <Icon name="lucide:wallet" size="20" class="text-farm-600" />
+            </div>
+            <p class="text-sm text-gray-500">Solde</p>
+          </div>
+          <p class="text-xl font-bold" :class="stats.balance >= 0 ? 'text-farm-600' : 'text-red-600'">
             {{ formatCurrency(stats.balance) }}
           </p>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-            <p class="text-xs text-gray-500 mb-1">Revenus</p>
-            <p class="text-lg font-semibold text-farm-600">
-              {{ formatCurrency(stats.totalIncome) }}
-            </p>
+        <NuxtLink to="/ventes" class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-farm-200 transition-colors">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+              <Icon name="lucide:trending-up" size="20" class="text-green-600" />
+            </div>
+            <p class="text-sm text-gray-500">Ventes</p>
           </div>
-          <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-            <p class="text-xs text-gray-500 mb-1">Dépenses</p>
-            <p class="text-lg font-semibold text-red-600">
-              {{ formatCurrency(stats.totalExpense) }}
-            </p>
+          <p class="text-xl font-bold text-farm-600">{{ formatCurrency(stats.totalVentes) }}</p>
+        </NuxtLink>
+
+        <NuxtLink to="/depenses" class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-red-200 transition-colors">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+              <Icon name="lucide:trending-down" size="20" class="text-red-600" />
+            </div>
+            <p class="text-sm text-gray-500">Dépenses</p>
           </div>
-        </div>
+          <p class="text-xl font-bold text-red-600">{{ formatCurrency(stats.totalDepenses) }}</p>
+        </NuxtLink>
+
+        <NuxtLink to="/cultures" class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-farm-200 transition-colors">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center">
+              <Icon name="lucide:sprout" size="20" class="text-yellow-600" />
+            </div>
+            <p class="text-sm text-gray-500">Cultures</p>
+          </div>
+          <p class="text-xl font-bold text-gray-900">{{ stats.culturesEnCours }} en cours</p>
+        </NuxtLink>
       </div>
 
-      <!-- Recent transactions -->
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold text-gray-800">Dernières transactions</h2>
-          <NuxtLink to="/transactions" class="text-sm text-farm-600 hover:underline">
-            Voir tout
+      <!-- Recent activity -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <h2 class="text-lg font-semibold text-gray-800">Activité récente</h2>
+        </div>
+
+        <div v-if="stats.recentActivity.length === 0" class="text-center py-8 text-gray-400">
+          Aucune activité pour le moment
+        </div>
+
+        <div v-else class="divide-y divide-gray-50">
+          <NuxtLink
+            v-for="a in stats.recentActivity"
+            :key="`${a.type}-${a.id}`"
+            :to="a.type === 'vente' ? '/ventes' : '/depenses'"
+            class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors"
+          >
+            <div class="min-w-0 flex-1">
+              <p class="font-medium text-gray-900 truncate">{{ a.label }}</p>
+              <p class="text-xs text-gray-500 mt-0.5">
+                {{ a.type === 'vente' ? 'Vente' : a.category || 'Dépense' }} &middot; {{ formatDate(a.date) }}
+              </p>
+            </div>
+            <p class="text-sm font-semibold ml-4 whitespace-nowrap"
+              :class="a.type === 'vente' ? 'text-farm-600' : 'text-red-600'">
+              {{ a.type === 'vente' ? '+' : '-' }}{{ formatCurrency(a.amount) }}
+            </p>
           </NuxtLink>
-        </div>
-
-        <div v-if="stats.recentTransactions.length === 0" class="text-center py-8 text-gray-400">
-          Aucune transaction pour le moment
-        </div>
-
-        <div class="space-y-3">
-          <TransactionCard
-            v-for="t in stats.recentTransactions"
-            :key="t.id"
-            :transaction="t"
-          />
         </div>
       </div>
     </template>

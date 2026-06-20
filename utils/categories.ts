@@ -1,20 +1,20 @@
-export const incomeCategories = [
-  'Vente de récolte',
-  'Subvention',
-  'Prêt reçu',
-  'Autre revenu',
-] as const
-
-export const expenseCategories = [
+export const depenseCategories = [
   'Semences',
-  'Engrais/pesticides',
+  'Engrais',
+  'Pesticides',
   "Main d'œuvre",
   'Matériel',
   'Transport',
   'Eau/irrigation',
-  'Autre dépense',
+  'Location terrain',
+  'Carburant',
+  'Autre',
 ] as const
 
-export function getCategoriesForType(type: 'income' | 'expense') {
-  return type === 'income' ? [...incomeCategories] : [...expenseCategories]
-}
+export const intrantCategories = [
+  { value: 'semence', label: 'Semence' },
+  { value: 'engrais', label: 'Engrais' },
+  { value: 'pesticide', label: 'Pesticide' },
+  { value: 'materiel', label: 'Matériel' },
+  { value: 'autre', label: 'Autre' },
+] as const

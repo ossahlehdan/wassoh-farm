@@ -13,6 +13,8 @@ export default defineEventHandler(async (event) => {
   const [site] = await db.insert(sites).values({
     name: body.name,
     location: body.location || null,
+    area: body.area || null,
+    areaUnit: body.areaUnit || 'ha',
   }).returning()
 
   return site

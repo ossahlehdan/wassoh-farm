@@ -1,17 +1,18 @@
 export function useDashboard() {
   const { $authFetch } = useAuth()
   const stats = ref<{
-    totalIncome: number
-    totalExpense: number
+    totalVentes: number
+    totalDepenses: number
     balance: number
-    recentTransactions: any[]
+    culturesEnCours: number
+    recentActivity: any[]
   } | null>(null)
   const loading = ref(false)
 
   async function fetchStats() {
     loading.value = true
     try {
-      stats.value = await $authFetch('/api/transactions/stats')
+      stats.value = await $authFetch('/api/dashboard/stats')
     } finally {
       loading.value = false
     }
