@@ -170,6 +170,7 @@ const intrantItems = [
 const adminItems = [
   { to: '/admin/sites', label: 'Sites', icon: 'lucide:map-pin' },
   { to: '/admin/utilisateurs', label: 'Utilisateurs', icon: 'lucide:users' },
+  { to: '/admin/parametres', label: 'Paramètres', icon: 'lucide:settings' },
 ]
 
 const mobileNav = [
