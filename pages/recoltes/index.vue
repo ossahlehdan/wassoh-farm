@@ -82,13 +82,21 @@
             <p class="text-sm font-semibold text-farm-700">{{ r.quantity }} {{ r.unit }}</p>
             <div class="flex gap-2 mt-2">
               <button class="text-xs text-farm-600 hover:underline" @click="startEdit(r)">Modifier</button>
-              <button class="text-xs text-red-500 hover:underline" @click="deleteRecolte(r.id)">Supprimer</button>
+              <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(r)">Supprimer</button>
             </div>
           </div>
         </div>
       </div>
       <p v-if="recoltesList.length === 0" class="text-center py-8 text-gray-400">Aucune récolte</p>
     </div>
+
+    <ConfirmModal
+      :show="!!deleting"
+      title="Supprimer la récolte"
+      :message="`Voulez-vous vraiment supprimer cette récolte de ${deleting?.cultureName} ?`"
+      @confirm="deleteRecolte"
+      @cancel="deleting = null"
+    />
   </div>
 </template>
 
@@ -101,6 +109,7 @@ const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
+const deleting = ref<any>(null)
 const form = reactive({ cultureId: '', quantity: '', unit: 'kg', quality: '', date: new Date().toISOString().split('T')[0], note: '' })
 
 async function fetchData() {
@@ -146,9 +155,14 @@ async function handleSubmit() {
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
 }
 
-async function deleteRecolte(id: number) {
-  if (!confirm('Supprimer cette récolte ?')) return
-  await $authFetch(`/api/recoltes/${id}`, { method: 'DELETE' })
+function confirmDelete(r: any) {
+  deleting.value = r
+}
+
+async function deleteRecolte() {
+  if (!deleting.value) return
+  await $authFetch(`/api/recoltes/${deleting.value.id}`, { method: 'DELETE' })
+  deleting.value = null
   await fetchData()
 }
 

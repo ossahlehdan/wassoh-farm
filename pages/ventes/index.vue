@@ -92,11 +92,19 @@
         </div>
         <div class="flex gap-2 mt-3 pt-3 border-t border-gray-50">
           <button class="text-xs text-farm-600 hover:underline" @click="startEdit(v)">Modifier</button>
-          <button class="text-xs text-red-500 hover:underline" @click="deleteVente(v.id)">Supprimer</button>
+          <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(v)">Supprimer</button>
         </div>
       </div>
       <p v-if="ventesList.length === 0" class="text-center py-8 text-gray-400">Aucune vente</p>
     </div>
+
+    <ConfirmModal
+      :show="!!deleting"
+      title="Supprimer la vente"
+      :message="`Voulez-vous vraiment supprimer ${deleting?.label} ?`"
+      @confirm="deleteVente"
+      @cancel="deleting = null"
+    />
   </div>
 </template>
 
@@ -109,6 +117,7 @@ const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
+const deleting = ref<any>(null)
 const form = reactive({ label: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', note: '' })
 
 async function fetchData() {
@@ -156,9 +165,14 @@ async function handleSubmit() {
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
 }
 
-async function deleteVente(id: number) {
-  if (!confirm('Supprimer cette vente ?')) return
-  await $authFetch(`/api/ventes/${id}`, { method: 'DELETE' })
+function confirmDelete(v: any) {
+  deleting.value = v
+}
+
+async function deleteVente() {
+  if (!deleting.value) return
+  await $authFetch(`/api/ventes/${deleting.value.id}`, { method: 'DELETE' })
+  deleting.value = null
   await fetchData()
 }
 

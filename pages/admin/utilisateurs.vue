@@ -86,12 +86,20 @@
               <p v-if="u.siteName" class="text-xs text-gray-400 mt-1">{{ u.siteName }}</p>
             </div>
             <button class="text-xs text-farm-600 hover:underline" @click="startEdit(u)">Modifier</button>
-            <button class="text-xs text-red-500 hover:underline" @click="deleteUser(u.id)">Supprimer</button>
+            <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(u)">Supprimer</button>
           </div>
         </div>
       </div>
       <p v-if="users.length === 0" class="text-center py-8 text-gray-400">Aucun utilisateur</p>
     </div>
+
+    <ConfirmModal
+      :show="!!deleting"
+      title="Supprimer l'utilisateur"
+      :message="`Voulez-vous vraiment supprimer ${deleting?.name} ?`"
+      @confirm="deleteUser"
+      @cancel="deleting = null"
+    />
   </div>
 </template>
 
@@ -107,6 +115,7 @@ const sites = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
 const editing = ref<number | null>(null)
+const deleting = ref<any>(null)
 const form = reactive({ name: '', username: '', password: '', role: 'employee', siteId: '' })
 
 async function fetchData() {
@@ -134,42 +143,48 @@ function startEdit(user: any) {
 
 function cancelEdit() {
   editing.value = null
-  form.name = ''
-  form.username = ''
-  form.password = ''
-  form.role = 'employee'
-  form.siteId = ''
+  Object.assign(form, { name: '', username: '', password: '', role: 'employee', siteId: '' })
 }
 
 async function handleSubmit() {
   error.value = ''
   try {
-    const body = { ...form, siteId: form.siteId ? Number(form.siteId) : null }
-    if (editing.value) {
-      if (!body.password) delete (body as any).password
-      await $authFetch(`/api/users/${editing.value}`, { method: 'PUT', body })
-      editing.value = null
-    } else {
-      await $authFetch('/api/users', { method: 'POST', body })
+    const payload: Record<string, any> = {
+      name: form.name,
+      username: form.username,
+      role: form.role,
+      siteId: form.siteId ? Number(form.siteId) : null,
     }
-    form.name = ''
-    form.username = ''
-    form.password = ''
-    form.role = 'employee'
-    form.siteId = ''
+    if (form.password) {
+      payload.password = form.password
+    }
+
+    if (editing.value) {
+      await $authFetch(`/api/users/${editing.value}`, { method: 'PUT', body: payload })
+    } else {
+      payload.password = form.password
+      await $authFetch('/api/users', { method: 'POST', body: payload })
+    }
+    cancelEdit()
     await fetchData()
   } catch (e: any) {
-    error.value = e.data?.message || e.statusMessage || 'Erreur'
+    error.value = e.data?.statusMessage || e.data?.message || e.statusMessage || 'Erreur'
   }
 }
 
-async function deleteUser(id: number) {
-  if (!confirm('Supprimer cet utilisateur ?')) return
+function confirmDelete(user: any) {
+  deleting.value = user
+}
+
+async function deleteUser() {
+  if (!deleting.value) return
   try {
-    await $authFetch(`/api/users/${id}`, { method: 'DELETE' })
+    await $authFetch(`/api/users/${deleting.value.id}`, { method: 'DELETE' })
+    deleting.value = null
     await fetchData()
   } catch (e: any) {
-    error.value = e.data?.message || e.statusMessage || 'Erreur lors de la suppression'
+    deleting.value = null
+    error.value = e.data?.statusMessage || e.data?.message || e.statusMessage || 'Erreur lors de la suppression'
   }
 }
 

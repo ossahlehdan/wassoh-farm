@@ -72,12 +72,20 @@
               {{ site.area }} {{ unitLabel(site.areaUnit) }}
             </span>
             <button class="text-xs text-farm-600 hover:underline" @click="startEdit(site)">Modifier</button>
-            <button class="text-xs text-red-500 hover:underline" @click="deleteSite(site.id)">Supprimer</button>
+            <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(site)">Supprimer</button>
           </div>
         </div>
       </div>
       <p v-if="sites.length === 0" class="text-center py-8 text-gray-400">Aucun site</p>
     </div>
+
+    <ConfirmModal
+      :show="!!deleting"
+      title="Supprimer le site"
+      :message="`Voulez-vous vraiment supprimer ${deleting?.name} ?`"
+      @confirm="deleteSite"
+      @cancel="deleting = null"
+    />
   </div>
 </template>
 
@@ -104,6 +112,7 @@ const sites = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
 const editing = ref<number | null>(null)
+const deleting = ref<any>(null)
 const form = reactive({ name: '', location: '', area: '', areaUnit: 'ha' })
 
 async function fetchSites() {
@@ -151,13 +160,19 @@ async function handleSubmit() {
   }
 }
 
-async function deleteSite(id: number) {
-  if (!confirm('Supprimer ce site ?')) return
+function confirmDelete(site: any) {
+  deleting.value = site
+}
+
+async function deleteSite() {
+  if (!deleting.value) return
   try {
-    await $authFetch(`/api/sites/${id}`, { method: 'DELETE' })
+    await $authFetch(`/api/sites/${deleting.value.id}`, { method: 'DELETE' })
+    deleting.value = null
     await fetchSites()
   } catch (e: any) {
-    error.value = e.data?.message || e.statusMessage || 'Erreur lors de la suppression'
+    deleting.value = null
+    error.value = e.data?.statusMessage || e.data?.message || e.statusMessage || 'Erreur lors de la suppression'
   }
 }
 

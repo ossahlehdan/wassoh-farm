@@ -87,12 +87,20 @@
           </div>
           <div class="flex items-center gap-3">
             <button class="text-xs text-farm-600 hover:underline" @click="startEdit(c)">Modifier</button>
-            <button class="text-xs text-red-500 hover:underline" @click="deleteCulture(c.id)">Supprimer</button>
+            <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(c)">Supprimer</button>
           </div>
         </div>
       </div>
       <p v-if="culturesList.length === 0" class="text-center py-8 text-gray-400">Aucune culture</p>
     </div>
+
+    <ConfirmModal
+      :show="!!deleting"
+      title="Supprimer la culture"
+      :message="`Voulez-vous vraiment supprimer ${deleting?.name} ?`"
+      @confirm="deleteCulture"
+      @cancel="deleting = null"
+    />
   </div>
 </template>
 
@@ -105,6 +113,7 @@ const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
+const deleting = ref<any>(null)
 const form = reactive({ name: '', siteId: '', area: '', areaUnit: 'ha', startDate: new Date().toISOString().split('T')[0], status: 'en_cours', note: '' })
 
 function statusLabel(s: string) {
@@ -164,9 +173,14 @@ async function handleSubmit() {
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
 }
 
-async function deleteCulture(id: number) {
-  if (!confirm('Supprimer cette culture ?')) return
-  await $authFetch(`/api/cultures/${id}`, { method: 'DELETE' })
+function confirmDelete(c: any) {
+  deleting.value = c
+}
+
+async function deleteCulture() {
+  if (!deleting.value) return
+  await $authFetch(`/api/cultures/${deleting.value.id}`, { method: 'DELETE' })
+  deleting.value = null
   await fetchData()
 }
 

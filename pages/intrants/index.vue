@@ -75,11 +75,19 @@
           </div>
           <div v-if="isAdmin" class="flex items-center gap-3">
             <button class="text-xs text-farm-600 hover:underline" @click="startEdit(i)">Modifier</button>
-            <button class="text-xs text-red-500 hover:underline" @click="deleteIntrant(i.id)">Supprimer</button>
+            <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(i)">Supprimer</button>
           </div>
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      :show="!!deleting"
+      title="Supprimer l'intrant"
+      :message="`Voulez-vous vraiment supprimer ${deleting?.name} ?`"
+      @confirm="deleteIntrant"
+      @cancel="deleting = null"
+    />
   </div>
 </template>
 
@@ -94,6 +102,7 @@ const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
+const deleting = ref<any>(null)
 const form = reactive({ name: '', category: '', unit: 'kg' })
 
 async function fetchData() {
@@ -135,9 +144,14 @@ async function handleSubmit() {
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
 }
 
-async function deleteIntrant(id: number) {
-  if (!confirm('Supprimer cet intrant ?')) return
-  await $authFetch(`/api/intrants/${id}`, { method: 'DELETE' })
+function confirmDelete(i: any) {
+  deleting.value = i
+}
+
+async function deleteIntrant() {
+  if (!deleting.value) return
+  await $authFetch(`/api/intrants/${deleting.value.id}`, { method: 'DELETE' })
+  deleting.value = null
   await fetchData()
 }
 

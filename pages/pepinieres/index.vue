@@ -136,7 +136,7 @@
           <div class="flex flex-col items-end gap-2">
             <div class="flex items-center gap-3">
               <button class="text-xs text-farm-600 hover:underline" @click="startEdit(p)">Modifier</button>
-              <button class="text-xs text-red-500 hover:underline" @click="deletePepiniere(p.id)">Supprimer</button>
+              <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(p)">Supprimer</button>
             </div>
             <button
               v-if="p.status !== 'transplantee' && p.status !== 'perdue'"
@@ -150,6 +150,14 @@
       </div>
       <p v-if="pepinieresList.length === 0" class="text-center py-8 text-gray-400">Aucune pépinière</p>
     </div>
+
+    <ConfirmModal
+      :show="!!deleting"
+      title="Supprimer la pépinière"
+      :message="`Voulez-vous vraiment supprimer ${deleting?.name} ?`"
+      @confirm="deletePepiniere"
+      @cancel="deleting = null"
+    />
   </div>
 </template>
 
@@ -163,6 +171,7 @@ const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
+const deleting = ref<any>(null)
 const form = reactive({
   name: '', siteId: '', plantsSown: '', plantsViable: '',
   sowDate: new Date().toISOString().split('T')[0], status: 'en_cours', note: '',
@@ -245,9 +254,14 @@ async function handleSubmit() {
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
 }
 
-async function deletePepiniere(id: number) {
-  if (!confirm('Supprimer cette pépinière ?')) return
-  await $authFetch(`/api/pepinieres/${id}`, { method: 'DELETE' })
+function confirmDelete(p: any) {
+  deleting.value = p
+}
+
+async function deletePepiniere() {
+  if (!deleting.value) return
+  await $authFetch(`/api/pepinieres/${deleting.value.id}`, { method: 'DELETE' })
+  deleting.value = null
   await fetchData()
 }
 
