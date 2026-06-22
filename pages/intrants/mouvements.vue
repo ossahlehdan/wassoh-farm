@@ -103,7 +103,7 @@ async function addMovement() {
         note: form.note,
       },
     })
-    Object.assign(form, { intrantId: '', fromSiteId: '', toSiteId: '', quantity: '', note: '' })
+    Object.assign(form, { intrantId: '', fromSiteId: '', toSiteId: '', quantity: '', date: new Date().toISOString().split('T')[0], note: '' })
     showForm.value = false
     await fetchData()
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }

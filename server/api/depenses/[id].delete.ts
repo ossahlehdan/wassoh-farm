@@ -1,10 +1,10 @@
 import { db } from '~/server/db'
 import { depenses } from '~/server/db/schema'
 import { eq } from 'drizzle-orm'
-import { requireAuth } from '~/server/utils/auth'
+import { requireAdmin } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  await requireAuth(event)
+  await requireAdmin(event)
   const id = Number(getRouterParam(event, 'id'))
 
   const [deleted] = await db.delete(depenses).where(eq(depenses.id, id)).returning()

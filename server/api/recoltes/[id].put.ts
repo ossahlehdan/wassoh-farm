@@ -8,6 +8,10 @@ export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
   const body = await readBody(event)
 
+  if (!body.cultureId || !body.quantity || !body.unit || !body.date) {
+    throw createError({ statusCode: 400, statusMessage: 'Culture, quantité, unité et date requis' })
+  }
+
   const [updated] = await db
     .update(recoltes)
     .set({

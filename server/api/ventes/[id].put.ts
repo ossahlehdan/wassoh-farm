@@ -8,6 +8,10 @@ export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
   const body = await readBody(event)
 
+  if (!body.label || !body.quantity || !body.unit || !body.unitPrice || !body.date) {
+    throw createError({ statusCode: 400, statusMessage: 'Libellé, quantité, unité, prix unitaire et date requis' })
+  }
+
   const totalAmount = (Number(body.quantity) * Number(body.unitPrice)).toFixed(2)
   const siteId = user.role === 'employee' ? user.siteId : (body.siteId || null)
 

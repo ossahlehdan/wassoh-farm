@@ -8,6 +8,10 @@ export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
   const body = await readBody(event)
 
+  if (!body.name || !body.unit || !body.category) {
+    throw createError({ statusCode: 400, statusMessage: 'Nom, unité et catégorie requis' })
+  }
+
   const [updated] = await db
     .update(intrants)
     .set({ name: body.name, unit: body.unit, category: body.category })

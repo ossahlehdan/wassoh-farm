@@ -8,6 +8,10 @@ export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
   const body = await readBody(event)
 
+  if (!body.amount || !body.label || !body.category || !body.date) {
+    throw createError({ statusCode: 400, statusMessage: 'Montant, libellé, catégorie et date requis' })
+  }
+
   const siteId = user.role === 'employee' ? user.siteId : (body.siteId || null)
 
   const [updated] = await db

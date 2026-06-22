@@ -80,7 +80,7 @@ async function addPurchase() {
   error.value = ''
   try {
     await $authFetch('/api/intrants/achats', { method: 'POST', body: { ...form, intrantId: Number(form.intrantId) } })
-    Object.assign(form, { intrantId: '', quantity: '', unitPrice: '', supplier: '', note: '' })
+    Object.assign(form, { intrantId: '', quantity: '', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
     showForm.value = false
     await fetchData()
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
