@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'wassoh-farm-secret-key-change-in-p
 export interface AuthUser {
   id: number
   name: string
-  email: string
+  username: string
   role: 'admin' | 'employee'
   siteId: number | null
 }

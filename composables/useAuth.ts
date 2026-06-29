@@ -1,7 +1,7 @@
 interface AuthUser {
   id: number
   name: string
-  email: string
+  username: string
   role: 'admin' | 'employee'
   siteId: number | null
 }
@@ -40,19 +40,19 @@ export function useAuth() {
     initialized.value = true
   }
 
-  async function login(email: string, password: string) {
+  async function login(username: string, password: string) {
     const data = await $fetch<{ token: string; user: AuthUser }>('/api/auth/login', {
       method: 'POST',
-      body: { email, password },
+      body: { username, password },
     })
     setAuth(data.token, data.user)
     return data.user
   }
 
-  async function setup(name: string, email: string, password: string) {
+  async function setup(name: string, username: string, password: string) {
     const data = await $fetch<{ token: string; user: AuthUser }>('/api/auth/setup', {
       method: 'POST',
-      body: { name, email, password },
+      body: { name, username, password },
     })
     setAuth(data.token, data.user)
     return data.user

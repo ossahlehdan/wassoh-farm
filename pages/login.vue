@@ -11,14 +11,14 @@
 
         <form class="space-y-4" @submit.prevent="handleLogin">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Identifiant</label>
             <input
-              id="email"
-              v-model="form.email"
-              type="email"
+              id="username"
+              v-model="form.username"
+              type="text"
               required
               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500"
-              placeholder="votre@email.com"
+              placeholder="Votre identifiant"
             />
           </div>
 
@@ -57,7 +57,7 @@ definePageMeta({ layout: false })
 const { login, isLoggedIn, initAuth } = useAuth()
 const router = useRouter()
 
-const form = reactive({ email: '', password: '' })
+const form = reactive({ username: '', password: '' })
 const error = ref('')
 const loading = ref(false)
 
@@ -72,7 +72,7 @@ async function handleLogin() {
   error.value = ''
   loading.value = true
   try {
-    await login(form.email, form.password)
+    await login(form.username, form.password)
     router.push('/')
   } catch (e: any) {
     error.value = e.data?.message || e.statusMessage || 'Erreur de connexion'

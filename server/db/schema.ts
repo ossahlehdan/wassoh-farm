@@ -1,10 +1,12 @@
 import { pgTable, serial, varchar, decimal, text, date, timestamp, integer } from 'drizzle-orm/pg-core'
 
-// ── Sites ──
+// ── Sites / Parcelles ──
 export const sites = pgTable('sites', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   location: varchar('location', { length: 255 }),
+  area: decimal('area', { precision: 10, scale: 2 }),
+  areaUnit: varchar('area_unit', { length: 10 }).default('ha'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
@@ -14,29 +16,41 @@ export type Site = typeof sites.$inferSelect
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
+  username: varchar('username', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
-  role: varchar('role', { length: 20 }).notNull().default('employee'), // 'admin' | 'employee'
-  siteId: integer('site_id').references(() => sites.id), // null = admin (tous les sites)
+  role: varchar('role', { length: 20 }).notNull().default('employee'),
+  siteId: integer('site_id').references(() => sites.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
 export type User = typeof users.$inferSelect
 
-// ── Products ──
-export const products = pgTable('products', {
+// ── Intrants (semences, engrais, pesticides, matériel) ──
+export const intrants = pgTable('intrants', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
-  unit: varchar('unit', { length: 50 }).notNull(), // kg, sac, litre, pièce, etc.
+  category: varchar('category', { length: 50 }).notNull(), // semence, engrais, pesticide, materiel, autre
+  unit: varchar('unit', { length: 50 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-export type Product = typeof products.$inferSelect
+export type Intrant = typeof intrants.$inferSelect
 
-// ── Stock Purchases (achats en gros) ──
-export const stockPurchases = pgTable('stock_purchases', {
+// ── Stock d'intrants (quantité par intrant par site) ──
+export const intrantStock = pgTable('intrant_stock', {
   id: serial('id').primaryKey(),
-  productId: integer('product_id').references(() => products.id).notNull(),
+  intrantId: integer('intrant_id').references(() => intrants.id).notNull(),
+  siteId: integer('site_id').references(() => sites.id), // null = entrepôt central
+  quantity: decimal('quantity', { precision: 12, scale: 2 }).notNull().default('0'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export type IntrantStock = typeof intrantStock.$inferSelect
+
+// ── Achats d'intrants ──
+export const intrantAchats = pgTable('intrant_achats', {
+  id: serial('id').primaryKey(),
+  intrantId: integer('intrant_id').references(() => intrants.id).notNull(),
   quantity: decimal('quantity', { precision: 12, scale: 2 }).notNull(),
   unitPrice: decimal('unit_price', { precision: 12, scale: 2 }).notNull(),
   totalAmount: decimal('total_amount', { precision: 12, scale: 2 }).notNull(),
@@ -47,24 +61,13 @@ export const stockPurchases = pgTable('stock_purchases', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-export type StockPurchase = typeof stockPurchases.$inferSelect
+export type IntrantAchat = typeof intrantAchats.$inferSelect
 
-// ── Stock (quantité par produit par site) ──
-export const stock = pgTable('stock', {
+// ── Mouvements d'intrants (transferts entre sites) ──
+export const intrantMouvements = pgTable('intrant_mouvements', {
   id: serial('id').primaryKey(),
-  productId: integer('product_id').references(() => products.id).notNull(),
-  siteId: integer('site_id').references(() => sites.id), // null = entrepôt central
-  quantity: decimal('quantity', { precision: 12, scale: 2 }).notNull().default('0'),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
-
-export type Stock = typeof stock.$inferSelect
-
-// ── Stock Movements (sorties/transferts vers un site) ──
-export const stockMovements = pgTable('stock_movements', {
-  id: serial('id').primaryKey(),
-  productId: integer('product_id').references(() => products.id).notNull(),
-  fromSiteId: integer('from_site_id').references(() => sites.id), // null = entrepôt central
+  intrantId: integer('intrant_id').references(() => intrants.id).notNull(),
+  fromSiteId: integer('from_site_id').references(() => sites.id),
   toSiteId: integer('to_site_id').references(() => sites.id).notNull(),
   quantity: decimal('quantity', { precision: 12, scale: 2 }).notNull(),
   note: text('note'),
@@ -73,22 +76,89 @@ export const stockMovements = pgTable('stock_movements', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
-export type StockMovement = typeof stockMovements.$inferSelect
+export type IntrantMouvement = typeof intrantMouvements.$inferSelect
 
-// ── Transactions (revenus / dépenses) ──
-export const transactions = pgTable('transactions', {
+// ── Pépinières ──
+export const pepinieres = pgTable('pepinieres', {
   id: serial('id').primaryKey(),
-  type: varchar('type', { length: 10 }).notNull(), // 'income' | 'expense'
+  name: varchar('name', { length: 255 }).notNull(), // variété : Riz NERICA, Tomate Roma...
+  siteId: integer('site_id').references(() => sites.id).notNull(),
+  plantsSown: integer('plants_sown').notNull(), // nombre de plants semés
+  plantsViable: integer('plants_viable'), // plants viables après germination
+  sowDate: date('sow_date').notNull(),
+  estimatedDays: integer('estimated_days'), // durée estimée en jours avant transplantation
+  status: varchar('status', { length: 20 }).notNull().default('en_cours'), // en_cours, prete, transplantee, perdue
+  note: text('note'),
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type Pepiniere = typeof pepinieres.$inferSelect
+
+// ── Cultures (ce qui est planté) ──
+export const cultures = pgTable('cultures', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(), // Riz, Maïs, Manioc...
+  siteId: integer('site_id').references(() => sites.id).notNull(),
+  pepiniereId: integer('pepiniere_id').references(() => pepinieres.id), // lien optionnel si issu d'une pépinière
+  area: decimal('area', { precision: 10, scale: 2 }),
+  areaUnit: varchar('area_unit', { length: 10 }).default('ha'),
+  startDate: date('start_date').notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('en_cours'), // en_cours, recoltee, abandonnee
+  note: text('note'),
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type Culture = typeof cultures.$inferSelect
+
+// ── Récoltes ──
+export const recoltes = pgTable('recoltes', {
+  id: serial('id').primaryKey(),
+  cultureId: integer('culture_id').references(() => cultures.id).notNull(),
+  quantity: decimal('quantity', { precision: 12, scale: 2 }).notNull(),
+  unit: varchar('unit', { length: 50 }).notNull(),
+  quality: varchar('quality', { length: 50 }), // bonne, moyenne, mauvaise
+  date: date('date').notNull(),
+  note: text('note'),
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type Recolte = typeof recoltes.$inferSelect
+
+// ── Ventes (vente de récoltes) ──
+export const ventes = pgTable('ventes', {
+  id: serial('id').primaryKey(),
+  recolteId: integer('recolte_id').references(() => recoltes.id),
+  label: varchar('label', { length: 255 }).notNull(),
+  quantity: decimal('quantity', { precision: 12, scale: 2 }).notNull(),
+  unit: varchar('unit', { length: 50 }).notNull(),
+  unitPrice: decimal('unit_price', { precision: 12, scale: 2 }).notNull(),
+  totalAmount: decimal('total_amount', { precision: 12, scale: 2 }).notNull(),
+  buyer: varchar('buyer', { length: 255 }),
+  date: date('date').notNull(),
+  siteId: integer('site_id').references(() => sites.id),
+  note: text('note'),
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export type Vente = typeof ventes.$inferSelect
+
+// ── Dépenses ──
+export const depenses = pgTable('depenses', {
+  id: serial('id').primaryKey(),
   amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
   label: varchar('label', { length: 255 }).notNull(),
   category: varchar('category', { length: 100 }).notNull(),
   note: text('note'),
   date: date('date').notNull(),
   siteId: integer('site_id').references(() => sites.id),
-  userId: integer('user_id').references(() => users.id),
+  cultureId: integer('culture_id').references(() => cultures.id),
+  achatIntrantId: integer('achat_intrant_id').references(() => intrantAchats.id),
+  createdBy: integer('created_by').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-export type Transaction = typeof transactions.$inferSelect
-export type NewTransaction = typeof transactions.$inferInsert
+export type Depense = typeof depenses.$inferSelect

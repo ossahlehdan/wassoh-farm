@@ -1,10 +1,12 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-farm-800 mb-6">Utilisateurs</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Utilisateurs</h1>
 
-    <!-- Add form -->
-    <form class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6 space-y-3" @submit.prevent="addUser">
-      <h2 class="text-sm font-semibold text-gray-700">Ajouter un utilisateur</h2>
+    <!-- Add / Edit form -->
+    <form class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6 space-y-3" @submit.prevent="handleSubmit">
+      <h2 class="text-sm font-semibold text-gray-700">
+        {{ editing ? 'Modifier l\'utilisateur' : 'Ajouter un utilisateur' }}
+      </h2>
       <input
         v-model="form.name"
         type="text"
@@ -13,17 +15,17 @@
         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500"
       />
       <input
-        v-model="form.email"
-        type="email"
+        v-model="form.username"
+        type="text"
         required
-        placeholder="Email"
+        placeholder="Identifiant"
         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500"
       />
       <input
         v-model="form.password"
         type="password"
-        required
-        placeholder="Mot de passe"
+        :required="!editing"
+        :placeholder="editing ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe'"
         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500"
       />
       <div class="grid grid-cols-2 gap-3">
@@ -45,9 +47,19 @@
         </select>
       </div>
       <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
-      <button type="submit" class="px-4 py-2 bg-farm-600 text-white rounded-lg text-sm hover:bg-farm-700">
-        Ajouter
-      </button>
+      <div class="flex gap-2">
+        <button type="submit" class="px-4 py-2 bg-farm-600 text-white rounded-lg text-sm hover:bg-farm-700">
+          {{ editing ? 'Enregistrer' : 'Ajouter' }}
+        </button>
+        <button
+          v-if="editing"
+          type="button"
+          class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200"
+          @click="cancelEdit"
+        >
+          Annuler
+        </button>
+      </div>
     </form>
 
     <!-- List -->
@@ -56,24 +68,38 @@
       <div
         v-for="u in users"
         :key="u.id"
-        class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 flex items-center justify-between"
+        class="bg-white rounded-xl shadow-sm p-4 border border-gray-100"
       >
-        <div>
-          <p class="font-medium text-gray-900">{{ u.name }}</p>
-          <p class="text-xs text-gray-500">{{ u.email }}</p>
-        </div>
-        <div class="text-right">
-          <span
-            class="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-            :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'"
-          >
-            {{ u.role === 'admin' ? 'Admin' : 'Employé' }}
-          </span>
-          <p v-if="u.siteName" class="text-xs text-gray-400 mt-1">{{ u.siteName }}</p>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">{{ u.name }}</p>
+            <p class="text-xs text-gray-500">{{ u.username }}</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <span
+                class="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'"
+              >
+                {{ u.role === 'admin' ? 'Admin' : 'Employé' }}
+              </span>
+              <p v-if="u.siteName" class="text-xs text-gray-400 mt-1">{{ u.siteName }}</p>
+            </div>
+            <button class="text-xs text-farm-600 hover:underline" @click="startEdit(u)">Modifier</button>
+            <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(u)">Supprimer</button>
+          </div>
         </div>
       </div>
       <p v-if="users.length === 0" class="text-center py-8 text-gray-400">Aucun utilisateur</p>
     </div>
+
+    <ConfirmModal
+      :show="!!deleting"
+      title="Supprimer l'utilisateur"
+      :message="`Voulez-vous vraiment supprimer ${deleting?.name} ?`"
+      @confirm="deleteUser"
+      @cancel="deleting = null"
+    />
   </div>
 </template>
 
@@ -83,11 +109,14 @@ const { $authFetch, isAdmin } = useAuth()
 if (!isAdmin.value) {
   navigateTo('/')
 }
+
 const users = ref<any[]>([])
 const sites = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
-const form = reactive({ name: '', email: '', password: '', role: 'employee', siteId: '' })
+const editing = ref<number | null>(null)
+const deleting = ref<any>(null)
+const form = reactive({ name: '', username: '', password: '', role: 'employee', siteId: '' })
 
 async function fetchData() {
   loading.value = true
@@ -103,21 +132,59 @@ async function fetchData() {
   }
 }
 
-async function addUser() {
+function startEdit(user: any) {
+  editing.value = user.id
+  form.name = user.name
+  form.username = user.username
+  form.password = ''
+  form.role = user.role
+  form.siteId = user.siteId ? String(user.siteId) : ''
+}
+
+function cancelEdit() {
+  editing.value = null
+  Object.assign(form, { name: '', username: '', password: '', role: 'employee', siteId: '' })
+}
+
+async function handleSubmit() {
   error.value = ''
   try {
-    await $authFetch('/api/users', {
-      method: 'POST',
-      body: { ...form, siteId: form.siteId ? Number(form.siteId) : null },
-    })
-    form.name = ''
-    form.email = ''
-    form.password = ''
-    form.role = 'employee'
-    form.siteId = ''
+    const payload: Record<string, any> = {
+      name: form.name,
+      username: form.username,
+      role: form.role,
+      siteId: form.siteId ? Number(form.siteId) : null,
+    }
+    if (form.password) {
+      payload.password = form.password
+    }
+
+    if (editing.value) {
+      await $authFetch(`/api/users/${editing.value}`, { method: 'PUT', body: payload })
+    } else {
+      payload.password = form.password
+      await $authFetch('/api/users', { method: 'POST', body: payload })
+    }
+    cancelEdit()
     await fetchData()
   } catch (e: any) {
-    error.value = e.data?.message || e.statusMessage || 'Erreur'
+    error.value = e.data?.statusMessage || e.data?.message || e.statusMessage || 'Erreur'
+  }
+}
+
+function confirmDelete(user: any) {
+  deleting.value = user
+}
+
+async function deleteUser() {
+  if (!deleting.value) return
+  try {
+    await $authFetch(`/api/users/${deleting.value.id}`, { method: 'DELETE' })
+    deleting.value = null
+    await fetchData()
+  } catch (e: any) {
+    deleting.value = null
+    error.value = e.data?.statusMessage || e.data?.message || e.statusMessage || 'Erreur lors de la suppression'
   }
 }
 

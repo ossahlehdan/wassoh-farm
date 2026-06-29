@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
-export const transactionSchema = z.object({
-  type: z.enum(['income', 'expense']),
+export const depenseSchema = z.object({
   amount: z.string().refine((val) => {
     const num = Number(val)
     return !isNaN(num) && num > 0
@@ -12,4 +11,4 @@ export const transactionSchema = z.object({
   date: z.string().min(1, 'La date est requise'),
 })
 
-export type TransactionFormData = z.infer<typeof transactionSchema>
+export type DepenseFormData = z.infer<typeof depenseSchema>

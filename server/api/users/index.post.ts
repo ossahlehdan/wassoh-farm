@@ -6,8 +6,8 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
   const body = await readBody(event)
 
-  if (!body.name || !body.email || !body.password || !body.role) {
-    throw createError({ statusCode: 400, statusMessage: 'Nom, email, mot de passe et rôle requis' })
+  if (!body.name || !body.username || !body.password || !body.role) {
+    throw createError({ statusCode: 400, statusMessage: 'Nom, identifiant, mot de passe et rôle requis' })
   }
 
   if (body.role === 'employee' && !body.siteId) {
@@ -18,11 +18,11 @@ export default defineEventHandler(async (event) => {
 
   const [user] = await db.insert(users).values({
     name: body.name,
-    email: body.email,
+    username: body.username,
     passwordHash,
     role: body.role,
     siteId: body.role === 'admin' ? null : body.siteId,
   }).returning()
 
-  return { id: user.id, name: user.name, email: user.email, role: user.role, siteId: user.siteId }
+  return { id: user.id, name: user.name, username: user.username, role: user.role, siteId: user.siteId }
 })
