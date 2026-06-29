@@ -11,14 +11,20 @@
 
     <form v-if="showForm" class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6 space-y-3" @submit.prevent="addPurchase">
       <h2 class="text-sm font-semibold text-gray-700">Nouvel achat</h2>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Intrant</label>
-        <select v-model="form.intrantId" required
-          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500"
-          @change="onIntrantChange">
-          <option value="" disabled>Choisir un intrant...</option>
-          <option v-for="i in intrantsList" :key="i.id" :value="i.id">{{ i.name }}</option>
-        </select>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Nom de l'intrant</label>
+          <input v-model="form.name" type="text" required placeholder="Ex: Engrais NPK, Semence riz..."
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Type</label>
+          <select v-model="form.category" required
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+            <option value="" disabled>Choisir le type...</option>
+            <option v-for="c in intrantCategories" :key="c.value" :value="c.value">{{ c.label }}</option>
+          </select>
+        </div>
       </div>
       <div class="grid grid-cols-3 gap-3">
         <div>
@@ -28,7 +34,7 @@
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Unité</label>
-          <select v-model="form.unit"
+          <select v-model="form.unit" required
             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
             <option value="kg">kg</option>
             <option value="tonne">tonne</option>
@@ -87,38 +93,27 @@
 </template>
 
 <script setup lang="ts">
+import { intrantCategories } from '~/utils/categories'
+
 const { $authFetch, isAdmin } = useAuth()
-const intrantsList = ref<any[]>([])
 const purchases = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
-const form = reactive({ intrantId: '', quantity: '', unit: 'kg', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
-
-function onIntrantChange() {
-  const intrant = intrantsList.value.find((i: any) => i.id === Number(form.intrantId))
-  if (intrant) {
-    form.unit = intrant.unit
-  }
-}
+const form = reactive({ name: '', category: '', quantity: '', unit: 'kg', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
 
 async function fetchData() {
   loading.value = true
   try {
-    const [i, p] = await Promise.all([
-      $authFetch<any[]>('/api/intrants'),
-      $authFetch<any[]>('/api/intrants/achats'),
-    ])
-    intrantsList.value = i
-    purchases.value = p
+    purchases.value = await $authFetch<any[]>('/api/intrants/achats')
   } finally { loading.value = false }
 }
 
 async function addPurchase() {
   error.value = ''
   try {
-    await $authFetch('/api/intrants/achats', { method: 'POST', body: { ...form, intrantId: Number(form.intrantId) } })
-    Object.assign(form, { intrantId: '', quantity: '', unit: 'kg', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
+    await $authFetch('/api/intrants/achats', { method: 'POST', body: { ...form } })
+    Object.assign(form, { name: '', category: '', quantity: '', unit: 'kg', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
     showForm.value = false
     await fetchData()
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }

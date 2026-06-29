@@ -15,16 +15,9 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-xs text-gray-500 mb-1">Libellé</label>
-          <input v-model="form.label" type="text" required placeholder="Ex: Achat d'engrais"
+          <input v-model="form.label" type="text" required placeholder="Ex: Carburant groupe électrogène"
             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
         </div>
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Montant (GNF)</label>
-          <input v-model="form.amount" type="number" min="0" step="any" required placeholder="Montant"
-            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs text-gray-500 mb-1">Catégorie</label>
           <select v-model="form.category" required
@@ -33,19 +26,69 @@
             <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
           </select>
         </div>
+      </div>
+
+      <!-- Mode de saisie -->
+      <div class="flex items-center gap-3">
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+          <input v-model="useQuantity" type="checkbox" class="rounded border-gray-300 text-farm-600 focus:ring-farm-500" />
+          Détailler la quantité
+        </label>
+      </div>
+
+      <!-- Saisie avec quantité -->
+      <div v-if="useQuantity" class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Quantité</label>
+          <input v-model="form.quantity" type="number" min="0" step="any" required placeholder="Quantité"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Unité</label>
+          <select v-model="form.unit"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+            <option value="litre">litre</option>
+            <option value="jour">jour</option>
+            <option value="heure">heure</option>
+            <option value="personne">personne</option>
+            <option value="voyage">voyage</option>
+            <option value="mois">mois</option>
+            <option value="kg">kg</option>
+            <option value="sac">sac</option>
+            <option value="pièce">pièce</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Prix unitaire (GNF)</label>
+          <input v-model="form.unitPrice" type="number" min="0" step="any" required placeholder="Prix"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+        </div>
+      </div>
+      <p v-if="useQuantity && form.quantity && form.unitPrice" class="text-sm text-gray-600">
+        Total : <span class="font-semibold text-red-600">{{ formatCurrency(Number(form.quantity) * Number(form.unitPrice)) }}</span>
+      </p>
+
+      <!-- Saisie montant direct -->
+      <div v-if="!useQuantity">
+        <label class="block text-xs text-gray-500 mb-1">Montant (GNF)</label>
+        <input v-model="form.amount" type="number" min="0" step="any" required placeholder="Montant total"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Culture associée (optionnel)</label>
+          <select v-model="form.cultureId"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+            <option value="">Aucune culture</option>
+            <option v-for="c in culturesList" :key="c.id" :value="c.id">{{ c.name }} ({{ c.siteName }})</option>
+          </select>
+        </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Date</label>
           <input v-model="form.date" type="date" required
             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
         </div>
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Culture associée (optionnel)</label>
-        <select v-model="form.cultureId"
-          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
-          <option value="">Aucune culture</option>
-          <option v-for="c in culturesList" :key="c.id" :value="c.id">{{ c.name }} ({{ c.siteName }})</option>
-        </select>
       </div>
       <div v-if="isAdmin">
         <label class="block text-xs text-gray-500 mb-1">Site</label>
@@ -76,7 +119,11 @@
               <p class="font-medium text-gray-900 truncate">{{ d.label }}</p>
               <span v-if="d.achatIntrantId" class="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 font-medium whitespace-nowrap">Achat intrant</span>
             </div>
-            <p class="text-xs text-gray-500 mt-0.5">{{ d.category }} &middot; {{ formatDate(d.date) }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">
+              {{ d.category }} &middot; {{ formatDate(d.date) }}
+              <span v-if="d.quantity && d.unit"> &middot; {{ d.quantity }} {{ d.unit }}</span>
+              <span v-if="d.unitPrice"> &times; {{ formatCurrency(d.unitPrice) }}</span>
+            </p>
             <p v-if="d.cultureName" class="text-xs text-purple-500 mt-0.5">Culture : {{ d.cultureName }}</p>
             <p v-if="d.siteName" class="text-xs text-blue-500 mt-0.5">{{ d.siteName }}</p>
           </div>
@@ -114,7 +161,11 @@ const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
 const deleting = ref<any>(null)
-const form = reactive({ label: '', amount: '', category: '', date: new Date().toISOString().split('T')[0], siteId: '', cultureId: '', note: '' })
+const useQuantity = ref(false)
+const form = reactive({
+  label: '', amount: '', category: '', quantity: '', unit: 'litre', unitPrice: '',
+  date: new Date().toISOString().split('T')[0], siteId: '', cultureId: '', note: '',
+})
 
 async function fetchData() {
   loading.value = true
@@ -135,25 +186,43 @@ function startEdit(d: any) {
   form.label = d.label
   form.amount = d.amount
   form.category = d.category
+  form.quantity = d.quantity || ''
+  form.unit = d.unit || 'litre'
+  form.unitPrice = d.unitPrice || ''
   form.date = d.date
   form.siteId = d.siteId ? String(d.siteId) : ''
   form.cultureId = d.cultureId ? String(d.cultureId) : ''
   form.note = d.note || ''
+  useQuantity.value = !!(d.quantity && d.unitPrice)
   showForm.value = true
 }
 
 function cancelEdit() {
   editing.value = null
-  Object.assign(form, { label: '', amount: '', category: '', date: new Date().toISOString().split('T')[0], siteId: '', cultureId: '', note: '' })
+  useQuantity.value = false
+  Object.assign(form, {
+    label: '', amount: '', category: '', quantity: '', unit: 'litre', unitPrice: '',
+    date: new Date().toISOString().split('T')[0], siteId: '', cultureId: '', note: '',
+  })
 }
 
 async function handleSubmit() {
   error.value = ''
   try {
-    const body = {
-      ...form,
+    const body: any = {
+      label: form.label,
+      category: form.category,
+      date: form.date,
       siteId: form.siteId ? Number(form.siteId) : null,
       cultureId: form.cultureId ? Number(form.cultureId) : null,
+      note: form.note,
+    }
+    if (useQuantity.value) {
+      body.quantity = form.quantity
+      body.unit = form.unit
+      body.unitPrice = form.unitPrice
+    } else {
+      body.amount = form.amount
     }
     if (editing.value) {
       await $authFetch(`/api/depenses/${editing.value}`, { method: 'PUT', body })
