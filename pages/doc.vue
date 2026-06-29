@@ -255,8 +255,8 @@
             <div class="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
               <Icon name="lucide:arrow-right-circle" size="16" class="text-blue-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p class="text-sm font-medium text-gray-700">Transplanter</p>
-                <p class="text-xs text-gray-500">Le bouton <strong>Transplanter</strong> cree automatiquement une culture liee. Choisissez la parcelle de destination, la superficie et la date</p>
+                <p class="text-sm font-medium text-gray-700">Transplanter (partiel ou total)</p>
+                <p class="text-xs text-gray-500">Choisissez combien de boites transplanter, la parcelle de destination et la date. Vous pouvez transplanter vers <strong>plusieurs sites</strong> en plusieurs fois. Le statut passe a "Transplantee" quand toutes les boites sont parties</p>
               </div>
             </div>
           </div>
@@ -396,7 +396,11 @@
             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
               <p class="text-sm font-semibold text-gray-700 mb-1">Depenses manuelles</p>
               <p class="text-xs text-gray-500">Main d'oeuvre, transport, carburant, location terrain, eau/irrigation, etc.</p>
-              <p class="text-xs text-gray-500 mt-1">Vous les ajoutez vous-meme avec le libelle, le montant et la categorie.</p>
+              <p class="text-xs text-gray-500 mt-1">Deux modes de saisie :</p>
+              <ul class="text-xs text-gray-500 mt-1 list-disc list-inside space-y-0.5">
+                <li><strong>Montant direct</strong> : saisissez le total en GNF</li>
+                <li><strong>Detailler la quantite</strong> : quantite x prix unitaire (ex: 20 litres x 12 000 GNF)</li>
+              </ul>
             </div>
             <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
               <div class="flex items-center gap-1.5 mb-1">
@@ -407,6 +411,14 @@
               <p class="text-xs text-gray-500 mt-1">Gerez-les depuis la page Intrants &gt; Achats.</p>
             </div>
           </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p class="text-xs font-semibold text-gray-700 mb-1">Exemples de saisie detaillee</p>
+            <div class="text-xs text-gray-500 space-y-0.5">
+              <p>Carburant : 20 litres x 12 000 GNF = 240 000 GNF</p>
+              <p>Main d'oeuvre : 5 jours x 50 000 GNF = 250 000 GNF</p>
+              <p>Location terrain : 1 mois x 500 000 GNF = 500 000 GNF</p>
+            </div>
+          </div>
           <ul class="text-sm text-gray-600 space-y-1.5">
             <li class="flex items-start gap-1.5">
               <Icon name="lucide:check" size="14" class="text-farm-500 mt-0.5 flex-shrink-0" />
@@ -414,7 +426,11 @@
             </li>
             <li class="flex items-start gap-1.5">
               <Icon name="lucide:check" size="14" class="text-farm-500 mt-0.5 flex-shrink-0" />
-              Categories : Semences, Engrais, Pesticides, Main d'oeuvre, Materiel, Transport, Eau/irrigation, Location terrain, Carburant, Autre
+              Categories : Main d'oeuvre, Transport, Eau/irrigation, Location terrain, Carburant, Autre
+            </li>
+            <li class="flex items-start gap-1.5">
+              <Icon name="lucide:check" size="14" class="text-farm-500 mt-0.5 flex-shrink-0" />
+              Unites disponibles : litre, jour, heure, personne, voyage, mois, kg, sac, piece
             </li>
           </ul>
         </div>
@@ -439,18 +455,18 @@
                 <Icon name="lucide:package" size="14" class="text-blue-600" />
                 <p class="text-sm font-semibold text-blue-700">Inventaire</p>
               </div>
-              <p class="text-xs text-gray-600">Catalogue de tous les intrants avec les quantites en stock par site. L'admin cree les types d'intrants (nom, categorie, unite).</p>
+              <p class="text-xs text-gray-600">Catalogue de tous les intrants avec les quantites en stock par site. Les intrants sont crees automatiquement lors du premier achat.</p>
             </div>
             <div class="p-3 bg-orange-50 rounded-lg border border-orange-100">
               <div class="flex items-center gap-2 mb-1">
                 <Icon name="lucide:shopping-cart" size="14" class="text-orange-600" />
                 <p class="text-sm font-semibold text-orange-700">Achats</p>
               </div>
-              <p class="text-xs text-gray-600">Enregistrez un achat avec le fournisseur, la quantite et le prix. <strong>Trois choses se passent automatiquement :</strong></p>
+              <p class="text-xs text-gray-600">Saisissez le nom de l'intrant, le type, la quantite, l'unite et le prix. L'intrant est cree dans le catalogue s'il n'existe pas. <strong>Trois choses se passent automatiquement :</strong></p>
               <ol class="text-xs text-gray-600 mt-1 list-decimal list-inside space-y-0.5">
+                <li>L'intrant est ajoute au catalogue (si nouveau)</li>
                 <li>Le stock central augmente</li>
-                <li>Une depense est creee avec la bonne categorie</li>
-                <li>Le solde du dashboard est mis a jour</li>
+                <li>Une depense est creee avec le detail quantite x prix</li>
               </ol>
             </div>
             <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -588,6 +604,18 @@
             <p class="text-sm font-semibold text-gray-800">Comment fonctionne le solde du tableau de bord ?</p>
             <p class="text-xs text-gray-500 mt-0.5">Solde = Total des ventes - Total des depenses. Les depenses incluent les depenses manuelles ET les achats d'intrants automatiques.</p>
           </div>
+          <div>
+            <p class="text-sm font-semibold text-gray-800">Puis-je transplanter une pepiniere vers plusieurs sites ?</p>
+            <p class="text-xs text-gray-500 mt-0.5">Oui. Choisissez le nombre de boites a transplanter a chaque fois. Le bouton reste disponible tant qu'il reste des boites. Ex: 10 boites → 4 vers Site A, 3 vers Site B, 3 vers Site C.</p>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-gray-800">Quelle difference entre depenses et achats d'intrants ?</p>
+            <p class="text-xs text-gray-500 mt-0.5">Les achats d'intrants (Semences, Engrais, Pesticides, Materiel) se font dans Intrants > Achats. Ils mettent a jour le stock et creent une depense automatique. Les depenses manuelles sont pour tout le reste : main d'oeuvre, transport, carburant, location, etc.</p>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-gray-800">Comment detailler une depense en quantite ?</p>
+            <p class="text-xs text-gray-500 mt-0.5">Cochez "Detailler la quantite" dans le formulaire. Vous pourrez indiquer la quantite, l'unite (litres, jours, heures...) et le prix unitaire. Le total se calcule automatiquement.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -614,9 +642,9 @@ const sections = [
 
 const workflowSteps = [
   { title: 'Creer les sites', desc: 'Ajoutez vos parcelles dans Administration > Sites avec leur nom, localisation et superficie', color: 'bg-gray-200 text-gray-700' },
-  { title: 'Configurer les intrants', desc: 'Creez le catalogue d\'intrants (semences, engrais...) et enregistrez les premiers achats', color: 'bg-blue-100 text-blue-700' },
+  { title: 'Acheter les intrants', desc: 'Enregistrez vos achats (semences, engrais...) — les intrants sont crees automatiquement dans le catalogue', color: 'bg-blue-100 text-blue-700' },
   { title: 'Preparer les pepinieres', desc: 'Semez vos boites, suivez la viabilite et notez les boites viables', color: 'bg-purple-100 text-purple-700' },
-  { title: 'Transplanter ou semer', desc: 'Transplantez depuis une pepiniere ou creez une culture directement sur un site', color: 'bg-green-100 text-green-700' },
+  { title: 'Transplanter ou semer', desc: 'Transplantez tout ou partie des boites vers un ou plusieurs sites, ou creez une culture directement', color: 'bg-green-100 text-green-700' },
   { title: 'Enregistrer les recoltes', desc: 'Ajoutez la quantite recoltee avec l\'unite et la qualite pour chaque culture en cours', color: 'bg-yellow-100 text-yellow-700' },
   { title: 'Vendre les recoltes', desc: 'Liez chaque vente a une recolte. Le libelle et l\'unite se remplissent automatiquement', color: 'bg-farm-100 text-farm-700' },
   { title: 'Suivre les depenses', desc: 'Les achats d\'intrants creent des depenses automatiques. Ajoutez les depenses manuelles (main d\'oeuvre, transport...)', color: 'bg-red-100 text-red-700' },
