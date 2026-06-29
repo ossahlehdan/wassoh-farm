@@ -1,5 +1,5 @@
 import { db } from '~/server/db'
-import { ventes, depenses, cultures } from '~/server/db/schema'
+import { ventes, depenses, cultures, sites } from '~/server/db/schema'
 import { eq, sum, count, and, desc } from 'drizzle-orm'
 import { requireAuth } from '~/server/utils/auth'
 
@@ -61,11 +61,26 @@ export default defineEventHandler(async (event) => {
     ...recentDepenses.map((d) => ({ type: 'depense' as const, id: d.id, label: d.label, amount: Number(d.amount), date: d.date, category: d.category })),
   ].sort((a, b) => (b.date > a.date ? 1 : -1)).slice(0, 5)
 
+  // Stats par site (admin uniquement)
+  let siteStats: any[] = []
+  if (user.role === 'admin') {
+    const allSites = await db.select({ id: sites.id, name: sites.name }).from(sites)
+    siteStats = await Promise.all(allSites.map(async (site) => {
+      const [sv] = await db.select({ total: sum(ventes.totalAmount) }).from(ventes).where(eq(ventes.siteId, site.id))
+      const [sd] = await db.select({ total: sum(depenses.amount) }).from(depenses).where(eq(depenses.siteId, site.id))
+      const [sc] = await db.select({ total: count() }).from(cultures).where(and(eq(cultures.siteId, site.id), eq(cultures.status, 'en_cours')))
+      const v = Number(sv?.total ?? 0)
+      const d = Number(sd?.total ?? 0)
+      return { id: site.id, name: site.name, ventes: v, depenses: d, balance: v - d, cultures: sc.total }
+    }))
+  }
+
   return {
     totalVentes,
     totalDepenses,
     balance: totalVentes - totalDepenses,
     culturesEnCours: culturesResult.total,
     recentActivity,
+    siteStats,
   }
 })

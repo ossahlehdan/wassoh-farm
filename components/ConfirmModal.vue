@@ -47,10 +47,16 @@ withDefaults(defineProps<{
   confirmLabel: 'Supprimer',
 })
 
-defineEmits<{
+const emit = defineEmits<{
   confirm: []
   cancel: []
 }>()
+
+onMounted(() => {
+  const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') emit('cancel') }
+  window.addEventListener('keydown', handler)
+  onUnmounted(() => window.removeEventListener('keydown', handler))
+})
 </script>
 
 <style scoped>

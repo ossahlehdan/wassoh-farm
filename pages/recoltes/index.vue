@@ -60,8 +60,8 @@
         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-farm-500" />
       <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
       <div class="flex gap-2">
-        <button type="submit" class="px-4 py-2 bg-farm-600 text-white rounded-lg text-sm hover:bg-farm-700">
-          {{ editing ? 'Enregistrer' : 'Ajouter' }}
+        <button type="submit" :disabled="submitting" class="px-4 py-2 bg-farm-600 text-white rounded-lg text-sm hover:bg-farm-700 disabled:opacity-50">
+          {{ submitting ? 'Envoi...' : editing ? 'Enregistrer' : 'Ajouter' }}
         </button>
         <button v-if="editing" type="button" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm" @click="cancelEdit">Annuler</button>
       </div>
@@ -103,12 +103,16 @@
 </template>
 
 <script setup lang="ts">
+import { formatUnit } from '~/utils/units'
+
 const { $authFetch, isAdmin } = useAuth()
+const { showSuccess } = useToast()
 
 const recoltesList = ref<any[]>([])
 const culturesList = ref<any[]>([])
 const culturesEnCours = computed(() => culturesList.value.filter((c: any) => c.status === 'en_cours'))
 const loading = ref(false)
+const submitting = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
@@ -145,17 +149,21 @@ function cancelEdit() {
 
 async function handleSubmit() {
   error.value = ''
+  submitting.value = true
   try {
     const body = { ...form, cultureId: Number(form.cultureId) }
     if (editing.value) {
       await $authFetch(`/api/recoltes/${editing.value}`, { method: 'PUT', body })
+      showSuccess('Récolte modifiée')
     } else {
       await $authFetch('/api/recoltes', { method: 'POST', body })
+      showSuccess('Récolte enregistrée')
     }
     cancelEdit()
     showForm.value = false
     await fetchData()
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
+  finally { submitting.value = false }
 }
 
 function confirmDelete(r: any) {
@@ -168,13 +176,6 @@ async function deleteRecolte() {
   deleting.value = null
   await fetchData()
 }
-
-const unitLabels: Record<string, string> = {
-  kg: 'kg', tonne: 'tonne', sac: 'sac',
-  seau_petit: 'Seau (petit)', seau_grand: 'Seau (grand)',
-  botte: 'botte', caisse: 'caisse', panier: 'panier',
-}
-function formatUnit(u: string) { return unitLabels[u] || u }
 
 onMounted(fetchData)
 </script>

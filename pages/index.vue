@@ -66,6 +66,31 @@
         </NuxtLink>
       </div>
 
+      <!-- Site breakdown (admin) -->
+      <div v-if="stats.siteStats && stats.siteStats.length > 0" class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">Résumé par site</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div v-for="site in stats.siteStats" :key="site.id" class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+            <p class="font-medium text-gray-900 mb-2">{{ site.name }}</p>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p class="text-xs text-gray-500">Ventes</p>
+                <p class="text-sm font-semibold text-farm-600">{{ formatCurrency(site.ventes) }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500">Dépenses</p>
+                <p class="text-sm font-semibold text-red-600">{{ formatCurrency(site.depenses) }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500">Solde</p>
+                <p class="text-sm font-semibold" :class="site.balance >= 0 ? 'text-farm-600' : 'text-red-600'">{{ formatCurrency(site.balance) }}</p>
+              </div>
+            </div>
+            <p v-if="site.cultures > 0" class="text-xs text-gray-400 mt-2">{{ site.cultures }} culture(s) en cours</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent activity -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100">
         <div class="px-5 py-4 border-b border-gray-100">

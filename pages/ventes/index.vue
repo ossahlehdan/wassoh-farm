@@ -76,8 +76,8 @@
         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-farm-500" />
       <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
       <div class="flex gap-2">
-        <button type="submit" class="px-4 py-2 bg-farm-600 text-white rounded-lg text-sm hover:bg-farm-700">
-          {{ editing ? 'Enregistrer' : 'Ajouter' }}
+        <button type="submit" :disabled="submitting" class="px-4 py-2 bg-farm-600 text-white rounded-lg text-sm hover:bg-farm-700 disabled:opacity-50">
+          {{ submitting ? 'Envoi...' : editing ? 'Enregistrer' : 'Ajouter' }}
         </button>
         <button v-if="editing" type="button" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm" @click="cancelEdit">Annuler</button>
       </div>
@@ -94,6 +94,7 @@
               {{ v.quantity }} {{ formatUnit(v.unit) }} &times; {{ formatCurrency(v.unitPrice) }}
               <span v-if="v.buyer"> &middot; {{ v.buyer }}</span>
             </p>
+            <p v-if="v.note" class="text-xs text-gray-400 mt-0.5 truncate">{{ v.note }}</p>
             <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(v.date) }}<span v-if="v.siteName"> &middot; {{ v.siteName }}</span></p>
           </div>
           <p class="text-sm font-semibold text-farm-600 ml-3">+{{ formatCurrency(v.totalAmount) }}</p>
@@ -117,12 +118,16 @@
 </template>
 
 <script setup lang="ts">
+import { formatUnit } from '~/utils/units'
+
 const { $authFetch, isAdmin } = useAuth()
+const { showSuccess } = useToast()
 
 const ventesList = ref<any[]>([])
 const recoltesList = ref<any[]>([])
 const sites = ref<any[]>([])
 const loading = ref(false)
+const submitting = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
@@ -175,6 +180,7 @@ function cancelEdit() {
 
 async function handleSubmit() {
   error.value = ''
+  submitting.value = true
   try {
     const label = getLabelFromRecolte(form.recolteId)
     const body = {
@@ -185,13 +191,16 @@ async function handleSubmit() {
     }
     if (editing.value) {
       await $authFetch(`/api/ventes/${editing.value}`, { method: 'PUT', body })
+      showSuccess('Vente modifiée')
     } else {
       await $authFetch('/api/ventes', { method: 'POST', body })
+      showSuccess('Vente enregistrée')
     }
     cancelEdit()
     showForm.value = false
     await fetchData()
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
+  finally { submitting.value = false }
 }
 
 function confirmDelete(v: any) {
@@ -204,13 +213,6 @@ async function deleteVente() {
   deleting.value = null
   await fetchData()
 }
-
-const unitLabels: Record<string, string> = {
-  kg: 'kg', tonne: 'tonne', sac: 'sac',
-  seau_petit: 'Seau (petit)', seau_grand: 'Seau (grand)',
-  botte: 'botte', caisse: 'caisse', panier: 'panier',
-}
-function formatUnit(u: string) { return unitLabels[u] || u }
 
 onMounted(fetchData)
 </script>
