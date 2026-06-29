@@ -272,7 +272,7 @@ async function deletePepiniere() {
 
 function startTransplant(p: any) {
   transplanting.value = p
-  transplantForm.siteId = defaultSiteId()
+  transplantForm.siteId = defaultSiteId() || String(p.siteId)
   transplantForm.area = ''
   transplantForm.areaUnit = 'ha'
   transplantForm.startDate = new Date().toISOString().split('T')[0]
@@ -282,11 +282,20 @@ function startTransplant(p: any) {
 
 async function confirmTransplant() {
   transplantError.value = ''
+  const siteId = transplantForm.siteId ? Number(transplantForm.siteId) : null
+  if (!siteId) {
+    transplantError.value = 'Veuillez choisir un site de destination'
+    return
+  }
+  if (!transplantForm.startDate) {
+    transplantError.value = 'Veuillez indiquer une date'
+    return
+  }
   try {
     await $authFetch(`/api/pepinieres/${transplanting.value.id}/transplant`, {
       method: 'POST',
       body: {
-        siteId: Number(transplantForm.siteId),
+        siteId,
         area: transplantForm.area ? Number(transplantForm.area) : null,
         areaUnit: transplantForm.areaUnit,
         startDate: transplantForm.startDate,
