@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
       areaUnit: body.areaUnit || 'ha',
       startDate: body.startDate,
       status: 'en_cours',
-      note: body.note || `Transplanté depuis pépinière: ${pepiniere.plantsSown} plants semés, ${pepiniere.plantsViable || '?'} viables`,
+      note: body.note || `Transplanté depuis pépinière: ${pepiniere.boxesSown} boîtes semées, ${pepiniere.boxesViable || '?'} viables`,
       createdBy: user.id,
     }).returning()
 

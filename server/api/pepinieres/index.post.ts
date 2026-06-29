@@ -6,8 +6,8 @@ export default defineEventHandler(async (event) => {
   const user = await requireAuth(event)
   const body = await readBody(event)
 
-  if (!body.name || !body.siteId || !body.plantsSown || !body.sowDate) {
-    throw createError({ statusCode: 400, statusMessage: 'Variété, site, nombre de plants et date de semis requis' })
+  if (!body.name || !body.siteId || !body.boxesSown || !body.sowDate) {
+    throw createError({ statusCode: 400, statusMessage: 'Variété, site, nombre de boîtes et date de semis requis' })
   }
 
   const siteId = user.role === 'employee' ? user.siteId : body.siteId
@@ -15,8 +15,8 @@ export default defineEventHandler(async (event) => {
   const [pepiniere] = await db.insert(pepinieres).values({
     name: body.name,
     siteId,
-    plantsSown: body.plantsSown,
-    plantsViable: body.plantsViable || null,
+    boxesSown: body.boxesSown,
+    boxesViable: body.boxesViable || null,
     sowDate: body.sowDate,
     status: body.status || 'en_cours',
     note: body.note || null,

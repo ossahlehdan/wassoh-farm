@@ -83,8 +83,8 @@ export const pepinieres = pgTable('pepinieres', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }).notNull(), // variété : Riz NERICA, Tomate Roma...
   siteId: integer('site_id').references(() => sites.id).notNull(),
-  plantsSown: integer('plants_sown').notNull(), // nombre de plants semés
-  plantsViable: integer('plants_viable'), // plants viables après germination
+  boxesSown: integer('boxes_sown').notNull(), // nombre de boîtes semées
+  boxesViable: integer('boxes_viable'), // boîtes viables après germination
   sowDate: date('sow_date').notNull(),
   estimatedDays: integer('estimated_days'), // durée estimée en jours avant transplantation
   status: varchar('status', { length: 20 }).notNull().default('en_cours'), // en_cours, prete, transplantee, perdue

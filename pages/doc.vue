@@ -235,21 +235,21 @@
         </div>
         <div class="p-5 space-y-3">
           <p class="text-sm text-gray-600 leading-relaxed">
-            Les pepinieres preparent les plants avant leur mise en terre. C'est la premiere etape du cycle de culture.
+            Les pepinieres preparent les semis avant leur mise en terre. Le suivi se fait par boites. C'est la premiere etape du cycle de culture.
           </p>
           <div class="space-y-2">
             <div class="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
               <Icon name="lucide:plus-circle" size="16" class="text-farm-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p class="text-sm font-medium text-gray-700">Creer une pepiniere</p>
-                <p class="text-xs text-gray-500">Indiquez la variete (ex: Riz NERICA), le site, le nombre de plants semes et la date de semis</p>
+                <p class="text-xs text-gray-500">Indiquez la variete (ex: Riz NERICA), le site, le nombre de boites semees et la date de semis</p>
               </div>
             </div>
             <div class="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
               <Icon name="lucide:bar-chart" size="16" class="text-farm-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p class="text-sm font-medium text-gray-700">Suivre la germination</p>
-                <p class="text-xs text-gray-500">Mettez a jour les plants viables. Le taux de germination se calcule automatiquement</p>
+                <p class="text-sm font-medium text-gray-700">Suivre la viabilite</p>
+                <p class="text-xs text-gray-500">Mettez a jour le nombre de boites viables. Le taux de viabilite se calcule automatiquement</p>
               </div>
             </div>
             <div class="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
@@ -615,7 +615,7 @@ const sections = [
 const workflowSteps = [
   { title: 'Creer les sites', desc: 'Ajoutez vos parcelles dans Administration > Sites avec leur nom, localisation et superficie', color: 'bg-gray-200 text-gray-700' },
   { title: 'Configurer les intrants', desc: 'Creez le catalogue d\'intrants (semences, engrais...) et enregistrez les premiers achats', color: 'bg-blue-100 text-blue-700' },
-  { title: 'Preparer les pepinieres', desc: 'Semez vos plants, suivez la germination et notez les plants viables', color: 'bg-purple-100 text-purple-700' },
+  { title: 'Preparer les pepinieres', desc: 'Semez vos boites, suivez la viabilite et notez les boites viables', color: 'bg-purple-100 text-purple-700' },
   { title: 'Transplanter ou semer', desc: 'Transplantez depuis une pepiniere ou creez une culture directement sur un site', color: 'bg-green-100 text-green-700' },
   { title: 'Enregistrer les recoltes', desc: 'Ajoutez la quantite recoltee avec l\'unite et la qualite pour chaque culture en cours', color: 'bg-yellow-100 text-yellow-700' },
   { title: 'Vendre les recoltes', desc: 'Liez chaque vente a une recolte. Le libelle et l\'unite se remplissent automatiquement', color: 'bg-farm-100 text-farm-700' },

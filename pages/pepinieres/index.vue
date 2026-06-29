@@ -29,13 +29,13 @@
       </div>
       <div class="grid grid-cols-3 gap-3">
         <div>
-          <label class="block text-xs text-gray-500 mb-1">Plants semés</label>
-          <input v-model="form.plantsSown" type="number" min="1" required placeholder="Nombre"
+          <label class="block text-xs text-gray-500 mb-1">Boîtes semées</label>
+          <input v-model="form.boxesSown" type="number" min="1" required placeholder="Nombre"
             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
         </div>
         <div>
-          <label class="block text-xs text-gray-500 mb-1">Plants viables</label>
-          <input v-model="form.plantsViable" type="number" min="0" placeholder="Après germination"
+          <label class="block text-xs text-gray-500 mb-1">Boîtes viables</label>
+          <input v-model="form.boxesViable" type="number" min="0" placeholder="Après germination"
             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
         </div>
         <div>
@@ -69,7 +69,7 @@
     <div v-if="transplanting" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
       <form class="bg-white rounded-xl shadow-lg p-5 w-full max-w-sm space-y-3" @submit.prevent="confirmTransplant">
         <h2 class="text-lg font-semibold text-gray-800">Transplanter</h2>
-        <p class="text-sm text-gray-500">{{ transplanting.name }} — {{ transplanting.plantsViable || transplanting.plantsSown }} plants</p>
+        <p class="text-sm text-gray-500">{{ transplanting.name }} — {{ transplanting.boxesViable || transplanting.boxesSown }} boîtes</p>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Parcelle de destination</label>
           <select v-model="transplantForm.siteId" required :disabled="isEmployee"
@@ -124,11 +124,11 @@
             <p class="text-xs text-gray-500 mt-1">{{ p.siteName }} &middot; Semis {{ formatDate(p.sowDate) }}</p>
             <div class="flex items-center gap-3 mt-1">
               <p class="text-xs text-gray-600">
-                <span class="font-medium">{{ p.plantsSown }}</span> semés
+                <span class="font-medium">{{ p.boxesSown }}</span> boîtes semées
               </p>
-              <p v-if="p.plantsViable != null" class="text-xs text-farm-600">
-                <span class="font-medium">{{ p.plantsViable }}</span> viables
-                <span class="text-gray-400">({{ germinationRate(p) }}%)</span>
+              <p v-if="p.boxesViable != null" class="text-xs text-farm-600">
+                <span class="font-medium">{{ p.boxesViable }}</span> viables
+                <span class="text-gray-400">({{ viabilityRate(p) }}%)</span>
               </p>
             </div>
             <p v-if="p.note" class="text-xs text-gray-400 mt-1 truncate">{{ p.note }}</p>
@@ -173,7 +173,7 @@ const showForm = ref(false)
 const editing = ref<number | null>(null)
 const deleting = ref<any>(null)
 const form = reactive({
-  name: '', siteId: '', plantsSown: '', plantsViable: '',
+  name: '', siteId: '', boxesSown: '', boxesViable: '',
   sowDate: new Date().toISOString().split('T')[0], status: 'en_cours', note: '',
 })
 
@@ -197,9 +197,9 @@ function statusClass(s: string) {
   }[s] || 'bg-gray-100 text-gray-500'
 }
 
-function germinationRate(p: any) {
-  if (!p.plantsViable || !p.plantsSown) return 0
-  return Math.round((p.plantsViable / p.plantsSown) * 100)
+function viabilityRate(p: any) {
+  if (!p.boxesViable || !p.boxesSown) return 0
+  return Math.round((p.boxesViable / p.boxesSown) * 100)
 }
 
 function defaultSiteId() {
@@ -223,8 +223,8 @@ function startEdit(p: any) {
   editing.value = p.id
   form.name = p.name
   form.siteId = String(p.siteId)
-  form.plantsSown = String(p.plantsSown)
-  form.plantsViable = p.plantsViable != null ? String(p.plantsViable) : ''
+  form.boxesSown = String(p.boxesSown)
+  form.boxesViable = p.boxesViable != null ? String(p.boxesViable) : ''
   form.sowDate = p.sowDate
   form.status = p.status
   form.note = p.note || ''
@@ -234,7 +234,7 @@ function startEdit(p: any) {
 function cancelEdit() {
   editing.value = null
   Object.assign(form, {
-    name: '', siteId: defaultSiteId(), plantsSown: '', plantsViable: '',
+    name: '', siteId: defaultSiteId(), boxesSown: '', boxesViable: '',
     sowDate: new Date().toISOString().split('T')[0], status: 'en_cours', note: '',
   })
 }
@@ -245,8 +245,8 @@ async function handleSubmit() {
     const body = {
       ...form,
       siteId: Number(form.siteId),
-      plantsSown: Number(form.plantsSown),
-      plantsViable: form.plantsViable ? Number(form.plantsViable) : null,
+      boxesSown: Number(form.boxesSown),
+      boxesViable: form.boxesViable ? Number(form.boxesViable) : null,
     }
     if (editing.value) {
       await $authFetch(`/api/pepinieres/${editing.value}`, { method: 'PUT', body })
