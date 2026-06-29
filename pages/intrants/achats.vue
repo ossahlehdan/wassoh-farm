@@ -11,24 +11,55 @@
 
     <form v-if="showForm" class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6 space-y-3" @submit.prevent="addPurchase">
       <h2 class="text-sm font-semibold text-gray-700">Nouvel achat</h2>
-      <select v-model="form.intrantId" required
-        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
-        <option value="" disabled>Intrant...</option>
-        <option v-for="i in intrantsList" :key="i.id" :value="i.id">{{ i.name }} ({{ i.unit }})</option>
-      </select>
-      <div class="grid grid-cols-2 gap-3">
-        <input v-model="form.quantity" type="number" min="0" step="any" required placeholder="Quantité"
-          class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
-        <input v-model="form.unitPrice" type="number" min="0" step="any" required placeholder="Prix unitaire (GNF)"
-          class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Intrant</label>
+        <select v-model="form.intrantId" required
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500"
+          @change="onIntrantChange">
+          <option value="" disabled>Choisir un intrant...</option>
+          <option v-for="i in intrantsList" :key="i.id" :value="i.id">{{ i.name }}</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Quantité</label>
+          <input v-model="form.quantity" type="number" min="0" step="any" required placeholder="Quantité"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Unité</label>
+          <select v-model="form.unit"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+            <option value="kg">kg</option>
+            <option value="tonne">tonne</option>
+            <option value="sac">sac</option>
+            <option value="litre">litre</option>
+            <option value="pièce">pièce</option>
+            <option value="boîte">boîte</option>
+            <option value="bidon">bidon</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Prix unitaire (GNF)</label>
+          <input v-model="form.unitPrice" type="number" min="0" step="any" required placeholder="Prix"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+        </div>
       </div>
       <p v-if="form.quantity && form.unitPrice" class="text-sm text-gray-600">
-        Total : <span class="font-semibold">{{ formatCurrency(Number(form.quantity) * Number(form.unitPrice)) }}</span>
+        Total : <span class="font-semibold text-farm-700">{{ formatCurrency(Number(form.quantity) * Number(form.unitPrice)) }}</span>
       </p>
-      <input v-model="form.supplier" type="text" placeholder="Fournisseur (optionnel)"
-        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
-      <input v-model="form.date" type="date" required
-        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Fournisseur (optionnel)</label>
+          <input v-model="form.supplier" type="text" placeholder="Nom du fournisseur"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Date</label>
+          <input v-model="form.date" type="date" required
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+        </div>
+      </div>
       <textarea v-model="form.note" rows="2" placeholder="Note (optionnel)"
         class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-farm-500" />
       <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
@@ -62,7 +93,14 @@ const purchases = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
-const form = reactive({ intrantId: '', quantity: '', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
+const form = reactive({ intrantId: '', quantity: '', unit: 'kg', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
+
+function onIntrantChange() {
+  const intrant = intrantsList.value.find((i: any) => i.id === Number(form.intrantId))
+  if (intrant) {
+    form.unit = intrant.unit
+  }
+}
 
 async function fetchData() {
   loading.value = true
@@ -80,7 +118,7 @@ async function addPurchase() {
   error.value = ''
   try {
     await $authFetch('/api/intrants/achats', { method: 'POST', body: { ...form, intrantId: Number(form.intrantId) } })
-    Object.assign(form, { intrantId: '', quantity: '', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
+    Object.assign(form, { intrantId: '', quantity: '', unit: 'kg', unitPrice: '', supplier: '', date: new Date().toISOString().split('T')[0], note: '' })
     showForm.value = false
     await fetchData()
   } catch (e: any) { error.value = e.data?.message || e.statusMessage || 'Erreur' }
