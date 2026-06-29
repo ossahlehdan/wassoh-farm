@@ -10,9 +10,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Variété, site, nombre de plants et date de semis requis' })
   }
 
+  const siteId = user.role === 'employee' ? user.siteId : body.siteId
+
   const [pepiniere] = await db.insert(pepinieres).values({
     name: body.name,
-    siteId: body.siteId,
+    siteId,
     plantsSown: body.plantsSown,
     plantsViable: body.plantsViable || null,
     sowDate: body.sowDate,

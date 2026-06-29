@@ -39,6 +39,14 @@
             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
         </div>
       </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Culture associée (optionnel)</label>
+        <select v-model="form.cultureId"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+          <option value="">Aucune culture</option>
+          <option v-for="c in culturesList" :key="c.id" :value="c.id">{{ c.name }} ({{ c.siteName }})</option>
+        </select>
+      </div>
       <div v-if="isAdmin">
         <label class="block text-xs text-gray-500 mb-1">Site</label>
         <select v-model="form.siteId"
@@ -66,6 +74,7 @@
           <div class="flex-1 min-w-0">
             <p class="font-medium text-gray-900 truncate">{{ d.label }}</p>
             <p class="text-xs text-gray-500 mt-0.5">{{ d.category }} &middot; {{ formatDate(d.date) }}</p>
+            <p v-if="d.cultureName" class="text-xs text-purple-500 mt-0.5">Culture : {{ d.cultureName }}</p>
             <p v-if="d.siteName" class="text-xs text-blue-500 mt-0.5">{{ d.siteName }}</p>
           </div>
           <p class="text-sm font-semibold text-red-600 ml-3">-{{ formatCurrency(d.amount) }}</p>
@@ -95,23 +104,26 @@ const { $authFetch, isAdmin } = useAuth()
 
 const categories = depenseCategories
 const depensesList = ref<any[]>([])
+const culturesList = ref<any[]>([])
 const sites = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
 const deleting = ref<any>(null)
-const form = reactive({ label: '', amount: '', category: '', date: new Date().toISOString().split('T')[0], siteId: '', note: '' })
+const form = reactive({ label: '', amount: '', category: '', date: new Date().toISOString().split('T')[0], siteId: '', cultureId: '', note: '' })
 
 async function fetchData() {
   loading.value = true
   try {
-    const [d, s] = await Promise.all([
+    const [d, s, c] = await Promise.all([
       $authFetch<any[]>('/api/depenses'),
       isAdmin.value ? $authFetch<any[]>('/api/sites') : Promise.resolve([]),
+      $authFetch<any[]>('/api/cultures'),
     ])
     depensesList.value = d
     sites.value = s
+    culturesList.value = c
   } finally { loading.value = false }
 }
 
@@ -122,19 +134,24 @@ function startEdit(d: any) {
   form.category = d.category
   form.date = d.date
   form.siteId = d.siteId ? String(d.siteId) : ''
+  form.cultureId = d.cultureId ? String(d.cultureId) : ''
   form.note = d.note || ''
   showForm.value = true
 }
 
 function cancelEdit() {
   editing.value = null
-  Object.assign(form, { label: '', amount: '', category: '', date: new Date().toISOString().split('T')[0], siteId: '', note: '' })
+  Object.assign(form, { label: '', amount: '', category: '', date: new Date().toISOString().split('T')[0], siteId: '', cultureId: '', note: '' })
 }
 
 async function handleSubmit() {
   error.value = ''
   try {
-    const body = { ...form, siteId: form.siteId ? Number(form.siteId) : null }
+    const body = {
+      ...form,
+      siteId: form.siteId ? Number(form.siteId) : null,
+      cultureId: form.cultureId ? Number(form.cultureId) : null,
+    }
     if (editing.value) {
       await $authFetch(`/api/depenses/${editing.value}`, { method: 'PUT', body })
     } else {

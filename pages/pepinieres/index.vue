@@ -20,8 +20,8 @@
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Site</label>
-          <select v-model="form.siteId" required
-            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+          <select v-model="form.siteId" required :disabled="isEmployee"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500 disabled:bg-gray-100 disabled:text-gray-500">
             <option value="" disabled>Choisir un site...</option>
             <option v-for="s in sites" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
@@ -72,8 +72,8 @@
         <p class="text-sm text-gray-500">{{ transplanting.name }} — {{ transplanting.plantsViable || transplanting.plantsSown }} plants</p>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Parcelle de destination</label>
-          <select v-model="transplantForm.siteId" required
-            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+          <select v-model="transplantForm.siteId" required :disabled="isEmployee"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500 disabled:bg-gray-100 disabled:text-gray-500">
             <option value="" disabled>Choisir un site...</option>
             <option v-for="s in sites" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-const { $authFetch, isAdmin } = useAuth()
+const { $authFetch, isAdmin, isEmployee, user } = useAuth()
 const router = useRouter()
 
 const pepinieresList = ref<any[]>([])
@@ -202,6 +202,10 @@ function germinationRate(p: any) {
   return Math.round((p.plantsViable / p.plantsSown) * 100)
 }
 
+function defaultSiteId() {
+  return isEmployee.value && user.value?.siteId ? String(user.value.siteId) : ''
+}
+
 async function fetchData() {
   loading.value = true
   try {
@@ -211,6 +215,7 @@ async function fetchData() {
     ])
     pepinieresList.value = p
     sites.value = s
+    if (!form.siteId) form.siteId = defaultSiteId()
   } finally { loading.value = false }
 }
 
@@ -229,7 +234,7 @@ function startEdit(p: any) {
 function cancelEdit() {
   editing.value = null
   Object.assign(form, {
-    name: '', siteId: '', plantsSown: '', plantsViable: '',
+    name: '', siteId: defaultSiteId(), plantsSown: '', plantsViable: '',
     sowDate: new Date().toISOString().split('T')[0], status: 'en_cours', note: '',
   })
 }
@@ -267,7 +272,7 @@ async function deletePepiniere() {
 
 function startTransplant(p: any) {
   transplanting.value = p
-  transplantForm.siteId = ''
+  transplantForm.siteId = defaultSiteId()
   transplantForm.area = ''
   transplantForm.areaUnit = 'ha'
   transplantForm.startDate = new Date().toISOString().split('T')[0]

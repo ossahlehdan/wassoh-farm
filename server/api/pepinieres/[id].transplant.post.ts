@@ -13,6 +13,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Site de destination et date de transplantation requis' })
   }
 
+  const siteId = user.role === 'employee' ? user.siteId : body.siteId
+
   // Vérifier que la pépinière existe et est prête
   const [pepiniere] = await db.select().from(pepinieres).where(eq(pepinieres.id, id))
   if (!pepiniere) throw createError({ statusCode: 404, statusMessage: 'Pépinière introuvable' })
@@ -24,7 +26,7 @@ export default defineEventHandler(async (event) => {
     // Créer la culture
     const [culture] = await tx.insert(cultures).values({
       name: pepiniere.name,
-      siteId: body.siteId,
+      siteId,
       pepiniereId: id,
       area: body.area || null,
       areaUnit: body.areaUnit || 'ha',

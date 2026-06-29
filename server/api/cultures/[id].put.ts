@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import { requireAuth } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  await requireAuth(event)
+  const user = await requireAuth(event)
   const id = Number(getRouterParam(event, 'id'))
   const body = await readBody(event)
 
@@ -12,11 +12,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Nom, site et date de semis requis' })
   }
 
+  const siteId = user.role === 'employee' ? user.siteId : body.siteId
+
   const [updated] = await db
     .update(cultures)
     .set({
       name: body.name,
-      siteId: body.siteId,
+      siteId,
       area: body.area || null,
       areaUnit: body.areaUnit || 'ha',
       startDate: body.startDate,

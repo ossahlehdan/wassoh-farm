@@ -17,7 +17,7 @@
         <select v-model="form.cultureId" required
           class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
           <option value="" disabled>Choisir une culture...</option>
-          <option v-for="c in culturesList" :key="c.id" :value="c.id">{{ c.name }} ({{ c.siteName }})</option>
+          <option v-for="c in culturesEnCours" :key="c.id" :value="c.id">{{ c.name }} ({{ c.siteName }})</option>
         </select>
       </div>
       <div class="grid grid-cols-3 gap-3">
@@ -107,6 +107,7 @@ const { $authFetch, isAdmin } = useAuth()
 
 const recoltesList = ref<any[]>([])
 const culturesList = ref<any[]>([])
+const culturesEnCours = computed(() => culturesList.value.filter((c: any) => c.status === 'en_cours'))
 const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)

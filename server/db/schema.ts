@@ -155,6 +155,7 @@ export const depenses = pgTable('depenses', {
   note: text('note'),
   date: date('date').notNull(),
   siteId: integer('site_id').references(() => sites.id),
+  cultureId: integer('culture_id').references(() => cultures.id),
   createdBy: integer('created_by').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })

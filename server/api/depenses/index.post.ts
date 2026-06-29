@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
     note: body.note || null,
     date: body.date,
     siteId,
+    cultureId: body.cultureId || null,
     createdBy: user.id,
   }).returning()
 

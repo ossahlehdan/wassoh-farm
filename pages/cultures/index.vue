@@ -22,8 +22,8 @@
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Site / Parcelle</label>
-          <select v-model="form.siteId" required
-            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+          <select v-model="form.siteId" required :disabled="isEmployee"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500 disabled:bg-gray-100 disabled:text-gray-500">
             <option value="" disabled>Choisir un site...</option>
             <option v-for="s in sites" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-const { $authFetch, isAdmin } = useAuth()
+const { $authFetch, isAdmin, isEmployee, user } = useAuth()
 
 const culturesList = ref<any[]>([])
 const sites = ref<any[]>([])
@@ -128,6 +128,10 @@ function statusClass(s: string) {
   }[s] || 'bg-gray-100 text-gray-500'
 }
 
+function defaultSiteId() {
+  return isEmployee.value && user.value?.siteId ? String(user.value.siteId) : ''
+}
+
 async function fetchData() {
   loading.value = true
   try {
@@ -137,6 +141,7 @@ async function fetchData() {
     ])
     culturesList.value = c
     sites.value = s
+    if (!form.siteId) form.siteId = defaultSiteId()
   } finally { loading.value = false }
 }
 
@@ -154,7 +159,7 @@ function startEdit(c: any) {
 
 function cancelEdit() {
   editing.value = null
-  Object.assign(form, { name: '', siteId: '', area: '', areaUnit: 'ha', startDate: new Date().toISOString().split('T')[0], status: 'en_cours', note: '' })
+  Object.assign(form, { name: '', siteId: defaultSiteId(), area: '', areaUnit: 'ha', startDate: new Date().toISOString().split('T')[0], status: 'en_cours', note: '' })
 }
 
 async function handleSubmit() {
