@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
       siteName: sites.name,
       boxesSown: pepinieres.boxesSown,
       boxesViable: pepinieres.boxesViable,
+      boxesTransplanted: pepinieres.boxesTransplanted,
       sowDate: pepinieres.sowDate,
       status: pepinieres.status,
       note: pepinieres.note,
