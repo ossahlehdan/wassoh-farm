@@ -13,17 +13,15 @@
     <form v-if="showForm" class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6 space-y-3" @submit.prevent="handleSubmit">
       <h2 class="text-sm font-semibold text-gray-700">{{ editing ? 'Modifier' : 'Nouvelle vente' }}</h2>
       <div>
-        <label class="block text-xs text-gray-500 mb-1">Récolte associée (optionnel)</label>
-        <select v-model="form.recolteId"
-          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
-          <option value="">Aucune récolte</option>
-          <option v-for="r in recoltesList" :key="r.id" :value="r.id">{{ r.cultureName }} — {{ r.quantity }} {{ formatUnit(r.unit) }} ({{ formatDate(r.date) }})</option>
+        <label class="block text-xs text-gray-500 mb-1">Récolte</label>
+        <select v-model="form.recolteId" required
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500"
+          @change="onRecolteChange">
+          <option value="" disabled>Choisir une récolte...</option>
+          <option v-for="r in recoltesList" :key="r.id" :value="r.id">
+            {{ r.cultureName }} — {{ r.quantity }} {{ formatUnit(r.unit) }} ({{ formatDate(r.date) }})
+          </option>
         </select>
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Libellé</label>
-        <input v-model="form.label" type="text" required placeholder="Ex: Vente de riz au marché"
-          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
       </div>
       <div class="grid grid-cols-3 gap-3">
         <div>
@@ -96,7 +94,6 @@
               {{ v.quantity }} {{ formatUnit(v.unit) }} &times; {{ formatCurrency(v.unitPrice) }}
               <span v-if="v.buyer"> &middot; {{ v.buyer }}</span>
             </p>
-            <p v-if="v.recolteCultureName" class="text-xs text-purple-500 mt-0.5">Récolte : {{ v.recolteCultureName }}</p>
             <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(v.date) }}<span v-if="v.siteName"> &middot; {{ v.siteName }}</span></p>
           </div>
           <p class="text-sm font-semibold text-farm-600 ml-3">+{{ formatCurrency(v.totalAmount) }}</p>
@@ -130,7 +127,19 @@ const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
 const deleting = ref<any>(null)
-const form = reactive({ label: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', recolteId: '', note: '' })
+const form = reactive({ recolteId: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', note: '' })
+
+function onRecolteChange() {
+  const recolte = recoltesList.value.find((r: any) => r.id === Number(form.recolteId))
+  if (recolte) {
+    form.unit = recolte.unit
+  }
+}
+
+function getLabelFromRecolte(recolteId: number | string): string {
+  const recolte = recoltesList.value.find((r: any) => r.id === Number(recolteId))
+  return recolte ? `Vente de ${recolte.cultureName}` : ''
+}
 
 async function fetchData() {
   loading.value = true
@@ -148,27 +157,32 @@ async function fetchData() {
 
 function startEdit(v: any) {
   editing.value = v.id
-  form.label = v.label
+  form.recolteId = v.recolteId ? String(v.recolteId) : ''
   form.quantity = v.quantity
   form.unit = v.unit
   form.unitPrice = v.unitPrice
   form.buyer = v.buyer || ''
   form.date = v.date
   form.siteId = v.siteId ? String(v.siteId) : ''
-  form.recolteId = v.recolteId ? String(v.recolteId) : ''
   form.note = v.note || ''
   showForm.value = true
 }
 
 function cancelEdit() {
   editing.value = null
-  Object.assign(form, { label: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', recolteId: '', note: '' })
+  Object.assign(form, { recolteId: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', note: '' })
 }
 
 async function handleSubmit() {
   error.value = ''
   try {
-    const body = { ...form, siteId: form.siteId ? Number(form.siteId) : null, recolteId: form.recolteId ? Number(form.recolteId) : null }
+    const label = getLabelFromRecolte(form.recolteId)
+    const body = {
+      ...form,
+      label,
+      recolteId: Number(form.recolteId),
+      siteId: form.siteId ? Number(form.siteId) : null,
+    }
     if (editing.value) {
       await $authFetch(`/api/ventes/${editing.value}`, { method: 'PUT', body })
     } else {
