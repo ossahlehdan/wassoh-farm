@@ -85,6 +85,7 @@ export const pepinieres = pgTable('pepinieres', {
   siteId: integer('site_id').references(() => sites.id).notNull(),
   boxesSown: integer('boxes_sown').notNull(), // nombre de boîtes semées
   boxesViable: integer('boxes_viable'), // boîtes viables après germination
+  boxesTransplanted: integer('boxes_transplanted').notNull().default(0), // boîtes déjà transplantées
   sowDate: date('sow_date').notNull(),
   estimatedDays: integer('estimated_days'), // durée estimée en jours avant transplantation
   status: varchar('status', { length: 20 }).notNull().default('en_cours'), // en_cours, prete, transplantee, perdue

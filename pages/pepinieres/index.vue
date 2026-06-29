@@ -69,7 +69,17 @@
     <div v-if="transplanting" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
       <form class="bg-white rounded-xl shadow-lg p-5 w-full max-w-sm space-y-3" @submit.prevent="confirmTransplant">
         <h2 class="text-lg font-semibold text-gray-800">Transplanter</h2>
-        <p class="text-sm text-gray-500">{{ transplanting.name }} — {{ transplanting.boxesViable || transplanting.boxesSown }} boîtes</p>
+        <p class="text-sm text-gray-500">{{ transplanting.name }}</p>
+        <div class="p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
+          <span class="font-semibold">{{ remainingBoxes(transplanting) }}</span> boîtes disponibles
+          sur {{ totalBoxes(transplanting) }}
+          <span v-if="transplanting.boxesTransplanted > 0"> ({{ transplanting.boxesTransplanted }} déjà transplantées)</span>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Boîtes à transplanter</label>
+          <input v-model="transplantForm.boxes" type="number" min="1" :max="remainingBoxes(transplanting)" required placeholder="Nombre de boîtes"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
+        </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Parcelle de destination</label>
           <select v-model="transplantForm.siteId" required :disabled="isEmployee"
@@ -131,6 +141,10 @@
                 <span class="text-gray-400">({{ viabilityRate(p) }}%)</span>
               </p>
             </div>
+            <p v-if="p.boxesTransplanted > 0" class="text-xs text-blue-600 mt-0.5">
+              <span class="font-medium">{{ p.boxesTransplanted }}</span> transplantées
+              <span v-if="remainingBoxes(p) > 0" class="text-gray-400">({{ remainingBoxes(p) }} restantes)</span>
+            </p>
             <p v-if="p.note" class="text-xs text-gray-400 mt-1 truncate">{{ p.note }}</p>
           </div>
           <div class="flex flex-col items-end gap-2">
@@ -139,7 +153,7 @@
               <button v-if="isAdmin" class="text-xs text-red-500 hover:underline" @click="confirmDelete(p)">Supprimer</button>
             </div>
             <button
-              v-if="p.status !== 'transplantee' && p.status !== 'perdue'"
+              v-if="p.status !== 'perdue' && remainingBoxes(p) > 0"
               class="text-xs px-3 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
               @click="startTransplant(p)"
             >
@@ -180,9 +194,17 @@ const form = reactive({
 const transplanting = ref<any>(null)
 const transplantError = ref('')
 const transplantForm = reactive({
-  siteId: '', area: '', areaUnit: 'ha',
+  boxes: '', siteId: '', area: '', areaUnit: 'ha',
   startDate: new Date().toISOString().split('T')[0], note: '',
 })
+
+function totalBoxes(p: any) {
+  return p.boxesViable ?? p.boxesSown
+}
+
+function remainingBoxes(p: any) {
+  return totalBoxes(p) - (p.boxesTransplanted || 0)
+}
 
 function statusLabel(s: string) {
   return { en_cours: 'En cours', prete: 'Prête', transplantee: 'Transplantée', perdue: 'Perdue' }[s] || s
@@ -272,6 +294,7 @@ async function deletePepiniere() {
 
 function startTransplant(p: any) {
   transplanting.value = p
+  transplantForm.boxes = String(remainingBoxes(p))
   transplantForm.siteId = defaultSiteId() || String(p.siteId)
   transplantForm.area = ''
   transplantForm.areaUnit = 'ha'
@@ -287,6 +310,11 @@ async function confirmTransplant() {
     transplantError.value = 'Veuillez choisir un site de destination'
     return
   }
+  const boxes = Number(transplantForm.boxes)
+  if (!boxes || boxes <= 0) {
+    transplantError.value = 'Veuillez indiquer le nombre de boîtes'
+    return
+  }
   if (!transplantForm.startDate) {
     transplantError.value = 'Veuillez indiquer une date'
     return
@@ -296,6 +324,7 @@ async function confirmTransplant() {
       method: 'POST',
       body: {
         siteId,
+        boxes,
         area: transplantForm.area ? Number(transplantForm.area) : null,
         areaUnit: transplantForm.areaUnit,
         startDate: transplantForm.startDate,
