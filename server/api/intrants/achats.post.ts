@@ -1,5 +1,5 @@
 import { db } from '~/server/db'
-import { intrantAchats, intrantStock } from '~/server/db/schema'
+import { intrantAchats, intrantStock, intrants, depenses } from '~/server/db/schema'
 import { requireAdmin } from '~/server/utils/auth'
 import { eq, and, isNull } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
@@ -14,7 +14,14 @@ export default defineEventHandler(async (event) => {
 
   const totalAmount = (Number(body.quantity) * Number(body.unitPrice)).toFixed(2)
 
+  // Récupérer le nom de l'intrant pour le libellé de la dépense
+  const [intrant] = await db.select({ name: intrants.name, category: intrants.category }).from(intrants).where(eq(intrants.id, body.intrantId))
+  if (!intrant) {
+    throw createError({ statusCode: 404, statusMessage: 'Intrant introuvable' })
+  }
+
   return await db.transaction(async (tx) => {
+    // 1. Créer l'achat
     const [achat] = await tx.insert(intrantAchats).values({
       intrantId: body.intrantId,
       quantity: body.quantity,
@@ -26,7 +33,7 @@ export default defineEventHandler(async (event) => {
       createdBy: user.id,
     }).returning()
 
-    // Update central stock
+    // 2. Mettre à jour le stock central
     const [existing] = await tx
       .select()
       .from(intrantStock)
@@ -47,6 +54,27 @@ export default defineEventHandler(async (event) => {
         quantity: body.quantity,
       })
     }
+
+    // 3. Créer la dépense associée automatiquement
+    const categoryMap: Record<string, string> = {
+      semence: 'Semences',
+      engrais: 'Engrais',
+      pesticide: 'Pesticides',
+      materiel: 'Matériel',
+      autre: 'Autre',
+    }
+    const depenseCategory = categoryMap[intrant.category] || 'Autre'
+    const supplierNote = body.supplier ? ` (${body.supplier})` : ''
+
+    await tx.insert(depenses).values({
+      amount: totalAmount,
+      label: `Achat ${intrant.name} — ${body.quantity} unités${supplierNote}`,
+      category: depenseCategory,
+      note: body.note || null,
+      date: body.date,
+      achatIntrantId: achat.id,
+      createdBy: user.id,
+    })
 
     return achat
   })

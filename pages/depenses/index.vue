@@ -72,14 +72,17 @@
       <div v-for="d in depensesList" :key="d.id" class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
         <div class="flex items-start justify-between">
           <div class="flex-1 min-w-0">
-            <p class="font-medium text-gray-900 truncate">{{ d.label }}</p>
+            <div class="flex items-center gap-2">
+              <p class="font-medium text-gray-900 truncate">{{ d.label }}</p>
+              <span v-if="d.achatIntrantId" class="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 font-medium whitespace-nowrap">Achat intrant</span>
+            </div>
             <p class="text-xs text-gray-500 mt-0.5">{{ d.category }} &middot; {{ formatDate(d.date) }}</p>
             <p v-if="d.cultureName" class="text-xs text-purple-500 mt-0.5">Culture : {{ d.cultureName }}</p>
             <p v-if="d.siteName" class="text-xs text-blue-500 mt-0.5">{{ d.siteName }}</p>
           </div>
           <p class="text-sm font-semibold text-red-600 ml-3">-{{ formatCurrency(d.amount) }}</p>
         </div>
-        <div class="flex gap-2 mt-3 pt-3 border-t border-gray-50">
+        <div v-if="!d.achatIntrantId" class="flex gap-2 mt-3 pt-3 border-t border-gray-50">
           <button class="text-xs text-farm-600 hover:underline" @click="startEdit(d)">Modifier</button>
           <button v-if="isAdmin" class="text-xs text-red-500 hover:underline" @click="confirmDelete(d)">Supprimer</button>
         </div>

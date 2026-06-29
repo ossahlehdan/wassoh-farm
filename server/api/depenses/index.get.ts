@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
       siteName: sites.name,
       cultureId: depenses.cultureId,
       cultureName: cultures.name,
+      achatIntrantId: depenses.achatIntrantId,
       createdAt: depenses.createdAt,
     })
     .from(depenses)
