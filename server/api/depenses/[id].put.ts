@@ -8,8 +8,16 @@ export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
   const body = await readBody(event)
 
-  if (!body.amount || !body.label || !body.category || !body.date) {
-    throw createError({ statusCode: 400, statusMessage: 'Montant, libellé, catégorie et date requis' })
+  if (!body.label || !body.category || !body.date) {
+    throw createError({ statusCode: 400, statusMessage: 'Libellé, catégorie et date requis' })
+  }
+
+  let amount = body.amount
+  if (body.quantity && body.unitPrice) {
+    amount = (Number(body.quantity) * Number(body.unitPrice)).toFixed(2)
+  }
+  if (!amount) {
+    throw createError({ statusCode: 400, statusMessage: 'Montant ou quantité + prix unitaire requis' })
   }
 
   const siteId = user.role === 'employee' ? user.siteId : (body.siteId || null)
@@ -17,9 +25,12 @@ export default defineEventHandler(async (event) => {
   const [updated] = await db
     .update(depenses)
     .set({
-      amount: body.amount,
+      amount,
       label: body.label,
       category: body.category,
+      quantity: body.quantity || null,
+      unit: body.unit || null,
+      unitPrice: body.unitPrice || null,
       note: body.note || null,
       date: body.date,
       siteId,

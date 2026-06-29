@@ -1,9 +1,5 @@
 export const depenseCategories = [
-  'Semences',
-  'Engrais',
-  'Pesticides',
   "Main d'œuvre",
-  'Matériel',
   'Transport',
   'Eau/irrigation',
   'Location terrain',
