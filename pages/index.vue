@@ -50,6 +50,22 @@
         </NuxtLink>
       </div>
 
+      <!-- Quick links -->
+      <div class="grid grid-cols-3 gap-3 mb-8">
+        <NuxtLink to="/recoltes" class="flex items-center gap-2 bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:border-farm-200 transition-colors">
+          <Icon name="lucide:wheat" size="20" class="text-farm-600" />
+          <span class="text-sm font-medium text-gray-700">Récoltes</span>
+        </NuxtLink>
+        <NuxtLink to="/pepinieres" class="flex items-center gap-2 bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:border-purple-200 transition-colors">
+          <Icon name="lucide:flower-2" size="20" class="text-purple-600" />
+          <span class="text-sm font-medium text-gray-700">Pépinières</span>
+        </NuxtLink>
+        <NuxtLink to="/intrants" class="flex items-center gap-2 bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:border-blue-200 transition-colors">
+          <Icon name="lucide:package" size="20" class="text-blue-600" />
+          <span class="text-sm font-medium text-gray-700">Intrants</span>
+        </NuxtLink>
+      </div>
+
       <!-- Recent activity -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-100">
         <div class="px-5 py-4 border-b border-gray-100">

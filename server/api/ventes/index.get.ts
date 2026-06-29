@@ -19,11 +19,14 @@ export default defineEventHandler(async (event) => {
       siteId: ventes.siteId,
       siteName: sites.name,
       recolteId: ventes.recolteId,
+      recolteCultureName: cultures.name,
       note: ventes.note,
       createdAt: ventes.createdAt,
     })
     .from(ventes)
     .leftJoin(sites, eq(ventes.siteId, sites.id))
+    .leftJoin(recoltes, eq(ventes.recolteId, recoltes.id))
+    .leftJoin(cultures, eq(recoltes.cultureId, cultures.id))
     .orderBy(desc(ventes.date))
 
   if (user.role === 'employee' && user.siteId) {

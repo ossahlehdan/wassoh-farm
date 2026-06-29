@@ -72,7 +72,7 @@
         </div>
         <div class="flex gap-2 mt-3 pt-3 border-t border-gray-50">
           <button class="text-xs text-farm-600 hover:underline" @click="startEdit(d)">Modifier</button>
-          <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(d)">Supprimer</button>
+          <button v-if="isAdmin" class="text-xs text-red-500 hover:underline" @click="confirmDelete(d)">Supprimer</button>
         </div>
       </div>
       <p v-if="depensesList.length === 0" class="text-center py-8 text-gray-400">Aucune dépense</p>

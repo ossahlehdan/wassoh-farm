@@ -33,6 +33,8 @@
             <option value="kg">kg</option>
             <option value="tonne">tonne</option>
             <option value="sac">sac</option>
+            <option value="seau_petit">Seau (petit)</option>
+            <option value="seau_grand">Seau (grand)</option>
             <option value="botte">botte</option>
             <option value="caisse">caisse</option>
             <option value="panier">panier</option>
@@ -79,10 +81,10 @@
             </p>
           </div>
           <div class="text-right">
-            <p class="text-sm font-semibold text-farm-700">{{ r.quantity }} {{ r.unit }}</p>
+            <p class="text-sm font-semibold text-farm-700">{{ r.quantity }} {{ formatUnit(r.unit) }}</p>
             <div class="flex gap-2 mt-2">
               <button class="text-xs text-farm-600 hover:underline" @click="startEdit(r)">Modifier</button>
-              <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(r)">Supprimer</button>
+              <button v-if="isAdmin" class="text-xs text-red-500 hover:underline" @click="confirmDelete(r)">Supprimer</button>
             </div>
           </div>
         </div>
@@ -101,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-const { $authFetch } = useAuth()
+const { $authFetch, isAdmin } = useAuth()
 
 const recoltesList = ref<any[]>([])
 const culturesList = ref<any[]>([])
@@ -165,6 +167,13 @@ async function deleteRecolte() {
   deleting.value = null
   await fetchData()
 }
+
+const unitLabels: Record<string, string> = {
+  kg: 'kg', tonne: 'tonne', sac: 'sac',
+  seau_petit: 'Seau (petit)', seau_grand: 'Seau (grand)',
+  botte: 'botte', caisse: 'caisse', panier: 'panier',
+}
+function formatUnit(u: string) { return unitLabels[u] || u }
 
 onMounted(fetchData)
 </script>

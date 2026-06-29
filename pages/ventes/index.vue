@@ -13,6 +13,14 @@
     <form v-if="showForm" class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6 space-y-3" @submit.prevent="handleSubmit">
       <h2 class="text-sm font-semibold text-gray-700">{{ editing ? 'Modifier' : 'Nouvelle vente' }}</h2>
       <div>
+        <label class="block text-xs text-gray-500 mb-1">Récolte associée (optionnel)</label>
+        <select v-model="form.recolteId"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-farm-500">
+          <option value="">Aucune récolte</option>
+          <option v-for="r in recoltesList" :key="r.id" :value="r.id">{{ r.cultureName }} — {{ r.quantity }} {{ formatUnit(r.unit) }} ({{ formatDate(r.date) }})</option>
+        </select>
+      </div>
+      <div>
         <label class="block text-xs text-gray-500 mb-1">Libellé</label>
         <input v-model="form.label" type="text" required placeholder="Ex: Vente de riz au marché"
           class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-farm-500" />
@@ -30,6 +38,8 @@
             <option value="kg">kg</option>
             <option value="tonne">tonne</option>
             <option value="sac">sac</option>
+            <option value="seau_petit">Seau (petit)</option>
+            <option value="seau_grand">Seau (grand)</option>
             <option value="botte">botte</option>
             <option value="caisse">caisse</option>
             <option value="panier">panier</option>
@@ -83,16 +93,17 @@
           <div class="flex-1 min-w-0">
             <p class="font-medium text-gray-900 truncate">{{ v.label }}</p>
             <p class="text-xs text-gray-500 mt-0.5">
-              {{ v.quantity }} {{ v.unit }} &times; {{ formatCurrency(v.unitPrice) }}
+              {{ v.quantity }} {{ formatUnit(v.unit) }} &times; {{ formatCurrency(v.unitPrice) }}
               <span v-if="v.buyer"> &middot; {{ v.buyer }}</span>
             </p>
+            <p v-if="v.recolteCultureName" class="text-xs text-purple-500 mt-0.5">Récolte : {{ v.recolteCultureName }}</p>
             <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(v.date) }}<span v-if="v.siteName"> &middot; {{ v.siteName }}</span></p>
           </div>
           <p class="text-sm font-semibold text-farm-600 ml-3">+{{ formatCurrency(v.totalAmount) }}</p>
         </div>
         <div class="flex gap-2 mt-3 pt-3 border-t border-gray-50">
           <button class="text-xs text-farm-600 hover:underline" @click="startEdit(v)">Modifier</button>
-          <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(v)">Supprimer</button>
+          <button v-if="isAdmin" class="text-xs text-red-500 hover:underline" @click="confirmDelete(v)">Supprimer</button>
         </div>
       </div>
       <p v-if="ventesList.length === 0" class="text-center py-8 text-gray-400">Aucune vente</p>
@@ -112,23 +123,26 @@
 const { $authFetch, isAdmin } = useAuth()
 
 const ventesList = ref<any[]>([])
+const recoltesList = ref<any[]>([])
 const sites = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
 const showForm = ref(false)
 const editing = ref<number | null>(null)
 const deleting = ref<any>(null)
-const form = reactive({ label: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', note: '' })
+const form = reactive({ label: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', recolteId: '', note: '' })
 
 async function fetchData() {
   loading.value = true
   try {
-    const [v, s] = await Promise.all([
+    const [v, s, r] = await Promise.all([
       $authFetch<any[]>('/api/ventes'),
       isAdmin.value ? $authFetch<any[]>('/api/sites') : Promise.resolve([]),
+      $authFetch<any[]>('/api/recoltes'),
     ])
     ventesList.value = v
     sites.value = s
+    recoltesList.value = r
   } finally { loading.value = false }
 }
 
@@ -141,19 +155,20 @@ function startEdit(v: any) {
   form.buyer = v.buyer || ''
   form.date = v.date
   form.siteId = v.siteId ? String(v.siteId) : ''
+  form.recolteId = v.recolteId ? String(v.recolteId) : ''
   form.note = v.note || ''
   showForm.value = true
 }
 
 function cancelEdit() {
   editing.value = null
-  Object.assign(form, { label: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', note: '' })
+  Object.assign(form, { label: '', quantity: '', unit: 'kg', unitPrice: '', buyer: '', date: new Date().toISOString().split('T')[0], siteId: '', recolteId: '', note: '' })
 }
 
 async function handleSubmit() {
   error.value = ''
   try {
-    const body = { ...form, siteId: form.siteId ? Number(form.siteId) : null }
+    const body = { ...form, siteId: form.siteId ? Number(form.siteId) : null, recolteId: form.recolteId ? Number(form.recolteId) : null }
     if (editing.value) {
       await $authFetch(`/api/ventes/${editing.value}`, { method: 'PUT', body })
     } else {
@@ -175,6 +190,13 @@ async function deleteVente() {
   deleting.value = null
   await fetchData()
 }
+
+const unitLabels: Record<string, string> = {
+  kg: 'kg', tonne: 'tonne', sac: 'sac',
+  seau_petit: 'Seau (petit)', seau_grand: 'Seau (grand)',
+  botte: 'botte', caisse: 'caisse', panier: 'panier',
+}
+function formatUnit(u: string) { return unitLabels[u] || u }
 
 onMounted(fetchData)
 </script>

@@ -87,7 +87,7 @@
           </div>
           <div class="flex items-center gap-3">
             <button class="text-xs text-farm-600 hover:underline" @click="startEdit(c)">Modifier</button>
-            <button class="text-xs text-red-500 hover:underline" @click="confirmDelete(c)">Supprimer</button>
+            <button v-if="isAdmin" class="text-xs text-red-500 hover:underline" @click="confirmDelete(c)">Supprimer</button>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-const { $authFetch } = useAuth()
+const { $authFetch, isAdmin } = useAuth()
 
 const culturesList = ref<any[]>([])
 const sites = ref<any[]>([])

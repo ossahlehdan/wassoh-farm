@@ -159,6 +159,7 @@ const navItems = [
   { to: '/recoltes', label: 'Récoltes', icon: 'lucide:wheat' },
   { to: '/ventes', label: 'Ventes', icon: 'lucide:trending-up' },
   { to: '/depenses', label: 'Dépenses', icon: 'lucide:trending-down' },
+  { to: '/doc', label: 'Guide', icon: 'lucide:book-open' },
 ]
 
 const intrantItems = [
